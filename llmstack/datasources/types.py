@@ -26,8 +26,11 @@ class DataSourceTypeFactory:
     @staticmethod
     def get_datasource_type_handler(datasource_type: DataSourceType) -> DataSourceProcessor:
         subclasses = get_data_source_type_interface_subclasses()
-        for subclass in subclasses:
-            # Convert to lowercase to avoid case sensitivity
-            if subclass.slug() == datasource_type.slug.lower():
-                return subclass
-        return None
+        return next(
+            (
+                subclass
+                for subclass in subclasses
+                if subclass.slug() == datasource_type.slug.lower()
+            ),
+            None,
+        )

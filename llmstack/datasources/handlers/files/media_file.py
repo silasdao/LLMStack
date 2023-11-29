@@ -84,12 +84,11 @@ class MediaFileDataSource(DataSourceProcessor[MediaFileSchema]):
                 openai_key=openai_key),
         )
 
-        docs = [
+        return [
             Document(
                 page_content_key=self.get_content_key(),
                 page_content=t,
                 metadata={'source': data.data['file_name']},
-            ) for t in SpacyTextSplitter(chunk_size=1500).split_text(file_text)
+            )
+            for t in SpacyTextSplitter(chunk_size=1500).split_text(file_text)
         ]
-
-        return docs

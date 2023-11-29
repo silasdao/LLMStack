@@ -86,6 +86,4 @@ class ImagesGenerations(ApiProcessorInterface[ImagesGenerationsInput, ImagesGene
             ),
         )
 
-        output = self._output_stream.finalize()
-
-        return output
+        return self._output_stream.finalize()

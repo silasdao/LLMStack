@@ -78,14 +78,14 @@ class PptxFileDataSource(DataSourceProcessor[PptxFileSchema]):
             input=UriInput(env=DataSourceEnvironmentSchema(openai_key=self.openai_key), uri=data_uri), configuration=UriConfiguration()
         )
 
-        file_text = ''
-        for doc in result.documents:
-            file_text += doc.content.decode() + '\n'
-
-        docs = [
-            Document(page_content_key=self.get_content_key(), page_content=t, metadata={'source': data.data['file_name']}) for t in SpacyTextSplitter(
+        file_text = ''.join(doc.content.decode() + '\n' for doc in result.documents)
+        return [
+            Document(
+                page_content_key=self.get_content_key(),
+                page_content=t,
+                metadata={'source': data.data['file_name']},
+            )
+            for t in SpacyTextSplitter(
                 chunk_size=1500,
             ).split_text(file_text)
         ]
-
-        return docs

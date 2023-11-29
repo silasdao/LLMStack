@@ -49,7 +49,7 @@ class CodeInterpreterProcessor(ApiProcessorInterface[CodeInterpreterInput, CodeI
         code = self._input.code
 
         # Run the input code in a sandboxed subprocess environment and return the output
-        if not self._input.language == 'python':
+        if self._input.language != 'python':
             raise Exception('Invalid language')
 
         import subprocess

@@ -263,7 +263,7 @@ class HttpAPIProcessor(BaseProcessor[HttpAPIProcessorInput, HttpAPIProcessorOutp
         auth = None
         if (isinstance(authorization, APIKeyAuth)):
             headers['Authorization'] = f'Apikey {authorization.api_key}'
-        elif (isinstance(authorization, BearerTokenAuth)) or (isinstance(authorization, JWTBearerAuth)):
+        elif isinstance(authorization, (BearerTokenAuth, JWTBearerAuth)):
             headers['Authorization'] = f'Bearer {authorization.token}'
         elif (isinstance(authorization, BasicAuth)):
             auth = (
@@ -272,9 +272,7 @@ class HttpAPIProcessor(BaseProcessor[HttpAPIProcessorInput, HttpAPIProcessorOutp
             )
         elif isinstance(authorization, OAuth2):
             raise NotImplemented()
-        elif isinstance(authorization, NoAuth):
-            pass
-        else:
+        elif not isinstance(authorization, NoAuth):
             raise Exception('Invalid authorization type')
 
         return headers, auth

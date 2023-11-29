@@ -47,24 +47,22 @@ class DiscordBotRunner(AppRunner):
                     'type': 1,
                 },
             }
-        else:
-            if discord_message_type == 2 and discord_request_payload['data']['name'] == self.discord_config['slash_command_name']:
-                app_input = {}
-
-                for option in discord_request_payload['data']['options']:
-                    app_input[option['name']] = option['value']
-
-                return {
-                    'input': {
-                        'user': discord_request_payload['member']['user']['id'],
-                        'username': discord_request_payload['member']['user']['username'],
-                        'global_name': discord_request_payload['member']['user']['global_name'],
-                        'channel': discord_request_payload['channel_id'],
-                        'guild_id': discord_request_payload['guild_id'],
-                        'token': discord_request_payload['token'],
-                        **app_input,
-                    },
-                }
+        if discord_message_type == 2 and discord_request_payload['data']['name'] == self.discord_config['slash_command_name']:
+            app_input = {
+                option['name']: option['value']
+                for option in discord_request_payload['data']['options']
+            }
+            return {
+                'input': {
+                    'user': discord_request_payload['member']['user']['id'],
+                    'username': discord_request_payload['member']['user']['username'],
+                    'global_name': discord_request_payload['member']['user']['global_name'],
+                    'channel': discord_request_payload['channel_id'],
+                    'guild_id': discord_request_payload['guild_id'],
+                    'token': discord_request_payload['token'],
+                    **app_input,
+                },
+            }
 
         raise Exception('Invalid Discord request')
 

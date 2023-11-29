@@ -108,5 +108,4 @@ class ImagesEdit(ApiProcessorInterface[ImagesEditInput, ImagesEditOutput, Images
             ImagesEditOutput(answer=response.answer),
         )
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

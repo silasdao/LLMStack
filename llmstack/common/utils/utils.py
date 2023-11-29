@@ -108,17 +108,18 @@ def get_domain(url):
 def get_url_content_type(url):
     response = requests.head(url, allow_redirects=True, verify=False)
 
-    content_type = response.headers.get('Content-Type', '')
-    return content_type
+    return response.headers.get('Content-Type', '')
 
 
 def is_sitemap_url(url):
     try:
         content_type = get_url_content_type(url)
-        if 'application/xml' in content_type or 'text/xml' in content_type or 'text/plain' in content_type or 'application/rss+xml' in content_type:
-            return True
-        else:
-            return False
+        return (
+            'application/xml' in content_type
+            or 'text/xml' in content_type
+            or 'text/plain' in content_type
+            or 'application/rss+xml' in content_type
+        )
     except requests.exceptions.RequestException:
         return False
 
@@ -137,7 +138,7 @@ def scrape_url(url):
 
 
 def _retry_func(func, exceptions: List[Exception] = [], num_tries=1, min_delay=1, max_delay=None, backoff=2, log_exception=False):
-    f"""
+    """
     Retries a function or method until it returns True.
     :param func: The function to be retried.
     :param exceptions: The exceptions to catch. Default is Exception.
@@ -166,7 +167,9 @@ def _retry_func(func, exceptions: List[Exception] = [], num_tries=1, min_delay=1
 
             if _num_tries == 0:
                 raise e
-            elif len(exceptions) != 0 and not any([isinstance(e, exception) for exception in exceptions]):
+            elif len(exceptions) != 0 and not any(
+                isinstance(e, exception) for exception in exceptions
+            ):
                 raise e
 
             time.sleep(_delay)
@@ -217,7 +220,7 @@ def get_ui_schema_from_jsonschema(schema):
                         ui_schema[key][prop_key]['ui:widget'] = 'textarea'
                     elif schema[key][prop_key]['type'] == 'string':
                         ui_schema[key][prop_key]['ui:widget'] = 'text'
-                    elif schema[key][prop_key]['type'] == 'integer' or schema[key][prop_key]['type'] == 'number':
+                    elif schema[key][prop_key]['type'] in ['integer', 'number']:
                         ui_schema[key][prop_key]['ui:widget'] = 'updown'
                     elif schema[key][prop_key]['type'] == 'boolean':
                         ui_schema[key][prop_key]['ui:widget'] = 'checkbox'

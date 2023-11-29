@@ -23,10 +23,11 @@ def get_connection_type_interface_subclasses():
         subclasses_in_package = get_all_sub_classes(
             package, ConnectionTypeInterface)
 
-        for subclass in subclasses_in_package:
-            if subclass.__module__ not in excluded_packages:
-                subclasses.append(subclass)
-
+        subclasses.extend(
+            subclass
+            for subclass in subclasses_in_package
+            if subclass.__module__ not in excluded_packages
+        )
     return subclasses
 
 
@@ -68,7 +69,7 @@ class BaseSchema(BaseModel):
                             ui_schema[key][prop_key]['ui:widget'] = 'textarea'
                         elif schema[key][prop_key]['type'] == 'string':
                             ui_schema[key][prop_key]['ui:widget'] = 'text'
-                        elif schema[key][prop_key]['type'] == 'integer' or schema[key][prop_key]['type'] == 'number':
+                        elif schema[key][prop_key]['type'] in ['integer', 'number']:
                             ui_schema[key][prop_key]['ui:widget'] = 'updown'
                         elif schema[key][prop_key]['type'] == 'boolean':
                             ui_schema[key][prop_key]['ui:widget'] = 'checkbox'
@@ -136,8 +137,12 @@ class ConnectionTypeFactory:
     @staticmethod
     def get_connection_type_handler(connection_type_slug, provider_slug) -> ConnectionTypeInterface:
         subclasses = get_connection_type_interface_subclasses()
-        for subclass in subclasses:
-            # Convert to lowercase to avoid case sensitivity
-            if subclass.slug() == connection_type_slug and subclass.provider_slug() == provider_slug:
-                return subclass
-        return None
+        return next(
+            (
+                subclass
+                for subclass in subclasses
+                if subclass.slug() == connection_type_slug
+                and subclass.provider_slug() == provider_slug
+            ),
+            None,
+        )

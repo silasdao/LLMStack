@@ -26,15 +26,14 @@ def process_openai_error_response(response: HttpAPIProcessorOutput) -> str:
     """
         Processes the error response from OpenAI
     """
-    if response.content_json:
-        if 'error' in response.content_json:
-            if 'message' in response.content_json['error']:
-                return response.content_json['error']['message']
-            return response.content_json['error']
-        elif 'message' in response.content_json:
-            return response.content_json['message']
-    else:
+    if not response.content_json:
         return response.text
+    if 'error' in response.content_json:
+        if 'message' in response.content_json['error']:
+            return response.content_json['error']['message']
+        return response.content_json['error']
+    elif 'message' in response.content_json:
+        return response.content_json['message']
 
 
 class OpenAIAPIInputEnvironment(BaseInputEnvironment):
@@ -112,10 +111,11 @@ class OpenAIAPIProcessor(LLMBaseProcessor[BaseInputType, BaseOutputType, BaseCon
                 if http_response.text == 'data: [DONE]':
                     return
                 else:
-                    response = self._transform_streaming_api_response(
-                        input, configuration, http_response,
+                    yield self._transform_streaming_api_response(
+                        input,
+                        configuration,
+                        http_response,
                     )
-                    yield response
             else:
                 http_status_is_ok = False
                 error_message += http_response.text
@@ -151,10 +151,11 @@ class OpenAIAPIProcessor(LLMBaseProcessor[BaseInputType, BaseOutputType, BaseCon
 
         # If the response is ok, return the choices
         if isinstance(http_response, HttpAPIProcessorOutput) and http_response.is_ok:
-            response = self._transform_api_response(
-                input, configuration, http_response,
+            return self._transform_api_response(
+                input,
+                configuration,
+                http_response,
             )
-            return response
         else:
             raise Exception(process_openai_error_response(http_response))
 
@@ -255,7 +256,7 @@ class OpenAICompletionsAPIProcessor(OpenAIAPIProcessor[OpenAICompletionsAPIProce
         return 'openai_completions_api_processor'
 
     def _get_api_url(self) -> dict:
-        return '{}/completions'.format(OpenAIAPIProcessor.BASE_URL)
+        return f'{OpenAIAPIProcessor.BASE_URL}/completions'
 
     def api_url(self) -> str:
         return self._get_api_url()
@@ -427,7 +428,7 @@ class OpenAIChatCompletionsAPIProcessorConfiguration(OpenAIAPIProcessorConfigura
 
 class OpenAIChatCompletionsAPIProcessor(OpenAIAPIProcessor[OpenAIChatCompletionsAPIProcessorInput, OpenAIChatCompletionsAPIProcessorOutput, OpenAIChatCompletionsAPIProcessorConfiguration]):
     def _get_api_url(self) -> str:
-        return '{}/chat/completions'.format(OpenAIAPIProcessor.BASE_URL)
+        return f'{OpenAIAPIProcessor.BASE_URL}/chat/completions'
 
     def api_url(self) -> str:
         return self._get_api_url()
@@ -561,7 +562,7 @@ class OpenAIImageGenerationsProcessor(OpenAIAPIProcessor[OpenAIImageGenerationsP
         return 'openai_image_generations_processor'
 
     def _get_api_url(self) -> str:
-        return '{}/images/generations'.format(OpenAIAPIProcessor.BASE_URL)
+        return f'{OpenAIAPIProcessor.BASE_URL}/images/generations'
 
     def api_url(self) -> str:
         return self._get_api_url()
@@ -639,7 +640,7 @@ class OpenAIImageEditsProcessorConfiguration(OpenAIAPIProcessorConfiguration):
 
 class OpenAIImageEditsProcessor(OpenAIAPIProcessor[OpenAIImageEditsProcessorInput, OpenAIImageEditsProcessorOutput, OpenAIImageEditsProcessorConfiguration]):
     def _get_api_url(self) -> str:
-        return '{}/images/edits'.format(OpenAIAPIProcessor.BASE_URL)
+        return f'{OpenAIAPIProcessor.BASE_URL}/images/edits'
 
     def api_url(self) -> str:
         return self._get_api_url()
@@ -676,11 +677,12 @@ class OpenAIImageEditsProcessor(OpenAIAPIProcessor[OpenAIImageEditsProcessorInpu
             Invokes the API processor on the input and returns the output
         """
         http_api_processor = HttpAPIProcessor({'timeout': DEFAULT_TIMEOUT})
-        files = []
-
-        files.append(
-            ('image', (input.image.name, input.image.content, input.image.mime_type)),
-        )
+        files = [
+            (
+                'image',
+                (input.image.name, input.image.content, input.image.mime_type),
+            )
+        ]
 
         http_response = http_api_processor.process(
             HttpAPIProcessorInput(
@@ -696,10 +698,11 @@ class OpenAIImageEditsProcessor(OpenAIAPIProcessor[OpenAIImageEditsProcessorInpu
 
         # If the response is ok, return the choices
         if isinstance(http_response, HttpAPIProcessorOutput) and http_response.is_ok:
-            response = self._transform_api_response(
-                input, configuration, http_response,
+            return self._transform_api_response(
+                input,
+                configuration,
+                http_response,
             )
-            return response
         else:
             raise Exception(process_openai_error_response(http_response))
 
@@ -737,7 +740,7 @@ class OpenAIImageVariationsProcessorConfiguration(OpenAIAPIProcessorConfiguratio
 
 class OpenAIImageVariationsProcessor(OpenAIAPIProcessor[OpenAIImageVariationsProcessorInput, OpenAIImageVariationsProcessorOutput, OpenAIImageVariationsProcessorConfiguration]):
     def _get_api_url(self) -> str:
-        return '{}/images/variations'.format(OpenAIAPIProcessor.BASE_URL)
+        return f'{OpenAIAPIProcessor.BASE_URL}/images/variations'
 
     def api_url(self) -> str:
         return self._get_api_url()
@@ -773,11 +776,16 @@ class OpenAIImageVariationsProcessor(OpenAIAPIProcessor[OpenAIImageVariationsPro
         """
         http_api_processor = HttpAPIProcessor({'timeout': DEFAULT_TIMEOUT})
 
-        files = []
-        files.append(
-            ('image', (input.image.name, input.image.content, 'application/octet-stream')),
-        )
-
+        files = [
+            (
+                'image',
+                (
+                    input.image.name,
+                    input.image.content,
+                    'application/octet-stream',
+                ),
+            )
+        ]
         http_response = http_api_processor.process(
             HttpAPIProcessorInput(
                 url=self._get_api_url(),
@@ -792,10 +800,11 @@ class OpenAIImageVariationsProcessor(OpenAIAPIProcessor[OpenAIImageVariationsPro
 
         # If the response is ok, return the choices
         if isinstance(http_response, HttpAPIProcessorOutput) and http_response.is_ok:
-            response = self._transform_api_response(
-                input, configuration, http_response,
+            return self._transform_api_response(
+                input,
+                configuration,
+                http_response,
             )
-            return response
         else:
             raise Exception(process_openai_error_response(http_response))
 
@@ -832,7 +841,7 @@ class OpenAIEmbeddingsProcessorConfiguration(OpenAIAPIProcessorConfiguration):
 
 class OpenAIEmbeddingsProcessor(OpenAIAPIProcessor[OpenAIEmbeddingsProcessorInput, OpenAIEmbeddingsProcessorOutput, OpenAIEmbeddingsProcessorConfiguration]):
     def _get_api_url(self) -> str:
-        return '{}/embeddings'.format(super()._get_api_url())
+        return f'{super()._get_api_url()}/embeddings'
 
     def api_url(self) -> str:
         return self._get_api_url()
@@ -888,7 +897,7 @@ class OpenAIAudioTranscriptionProcessor(OpenAIAPIProcessor[OpenAIAudioTranscript
         return 'openai_audio_transcription_processor'
 
     def _get_api_url(self) -> str:
-        return '{}/audio/transcriptions'.format(OpenAIAPIProcessor.BASE_URL)
+        return f'{OpenAIAPIProcessor.BASE_URL}/audio/transcriptions'
 
     def api_url(self) -> str:
         return self._get_api_url()
@@ -916,10 +925,12 @@ class OpenAIAudioTranscriptionProcessor(OpenAIAPIProcessor[OpenAIAudioTranscript
         """
         http_api_processor = HttpAPIProcessor({'timeout': DEFAULT_TIMEOUT})
 
-        files = []
-        files.append(
-            ('file', (input.file.name, input.file.content, 'application/octet-stream')),
-        )
+        files = [
+            (
+                'file',
+                (input.file.name, input.file.content, 'application/octet-stream'),
+            )
+        ]
         input = HttpAPIProcessorInput(
             url=self._get_api_url(),
             method='POST',
@@ -935,10 +946,11 @@ class OpenAIAudioTranscriptionProcessor(OpenAIAPIProcessor[OpenAIAudioTranscript
 
         # If the response is ok, return the choices
         if isinstance(http_response, HttpAPIProcessorOutput) and http_response.is_ok:
-            response = self._transform_api_response(
-                input, configuration, http_response,
+            return self._transform_api_response(
+                input,
+                configuration,
+                http_response,
             )
-            return response
         else:
             raise Exception(process_openai_error_response(http_response))
 
@@ -983,7 +995,7 @@ class OpenAIAudioTranslationsProcessor(OpenAIAPIProcessor[OpenAIAudioTranslation
         return 'openai_audio_translation_processor'
 
     def _get_api_url(self) -> str:
-        return '{}/audio/translations'.format(OpenAIAPIProcessor.BASE_URL)
+        return f'{OpenAIAPIProcessor.BASE_URL}/audio/translations'
 
     def api_url(self) -> str:
         return self._get_api_url()
@@ -1010,10 +1022,12 @@ class OpenAIAudioTranslationsProcessor(OpenAIAPIProcessor[OpenAIAudioTranslation
         """
         http_api_processor = HttpAPIProcessor({'timeout': DEFAULT_TIMEOUT})
 
-        files = []
-        files.append(
-            ('file', (input.file.name, input.file.content, 'application/octet-stream')),
-        )
+        files = [
+            (
+                'file',
+                (input.file.name, input.file.content, 'application/octet-stream'),
+            )
+        ]
         input = HttpAPIProcessorInput(
             url=self._get_api_url(),
             method='POST',
@@ -1029,9 +1043,10 @@ class OpenAIAudioTranslationsProcessor(OpenAIAPIProcessor[OpenAIAudioTranslation
 
         # If the response is ok, return the choices
         if isinstance(http_response, HttpAPIProcessorOutput) and http_response.is_ok:
-            response = self._transform_api_response(
-                input, configuration, http_response,
+            return self._transform_api_response(
+                input,
+                configuration,
+                http_response,
             )
-            return response
         else:
             raise Exception(process_openai_error_response(http_response))

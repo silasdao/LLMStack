@@ -27,7 +27,5 @@ def get_all_sub_classes(module_name, clas_obj):
             classes.extend(module_classes)
         except ImportError as e:
             logger.exception(e)
-            pass
-
     # Filter out the Parent class (clas_obj)
     return list(filter(lambda x: x != clas_obj, classes))

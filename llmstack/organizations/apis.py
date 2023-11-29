@@ -23,10 +23,7 @@ class OrgPermission(BasePermission):
     def has_permission(self, request, view):
         profile = get_object_or_404(Profile, user=request.user)
         organization = profile.organization
-        if organization:
-            return True
-
-        return False
+        return bool(organization)
 
 
 class OrganizationViewSet(viewsets.ModelViewSet):
@@ -87,8 +84,7 @@ class OrganizationSettingsViewSet(viewsets.ModelViewSet):
             format, imgstr = logo_data_url.split(';base64,')
             ext = format.split('/')[-1]
             data = ContentFile(
-                base64.b64decode(imgstr),
-                name=organization.slug + '_logo.' + ext,
+                base64.b64decode(imgstr), name=f'{organization.slug}_logo.{ext}'
             )
             organization_settings.logo = data
 

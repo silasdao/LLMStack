@@ -58,5 +58,4 @@ class PromptlyHttpAPIProcessor(ApiProcessorInterface[PromptlyHttpAPIProcessorInp
                 code=200, text=response.text, content_json=response.content_json, is_ok=response.is_ok, headers=response.headers,
             ),
         )
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

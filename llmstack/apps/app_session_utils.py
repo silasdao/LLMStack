@@ -28,10 +28,7 @@ def create_app_session(app, app_session_uuid):
 
 def get_app_session(app_session_uuid):
     app_session = app_session_store.get(f'app_session_{app_session_uuid}')
-    if app_session is None:
-        return None
-
-    return json.loads(app_session)
+    return None if app_session is None else json.loads(app_session)
 
 
 def create_app_session_data(app_session, endpoint, data):
@@ -71,6 +68,4 @@ def get_app_session_data(app_session, endpoint):
     app_session_data = app_session_data_store.get(
         f'app_session_data_{app_session["uuid"]}_{endpoint_id}',
     )
-    if app_session_data is None:
-        return None
-    return json.loads(app_session_data)
+    return None if app_session_data is None else json.loads(app_session_data)

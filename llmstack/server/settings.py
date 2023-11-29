@@ -102,25 +102,25 @@ ASGI_APPLICATION = 'llmstack.server.asgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.{}'.format(
-            os.getenv('DATABASE_ENGINE', 'postgresql'),
-        ),
+        'ENGINE': f"django.db.backends.{os.getenv('DATABASE_ENGINE', 'postgresql')}",
         'NAME': os.getenv(
-            'DATABASE_NAME', 'llmstack',
+            'DATABASE_NAME',
+            'llmstack',
         ),
         'USER': os.getenv('DATABASE_USERNAME', 'llmstack'),
         'PASSWORD': os.getenv('DATABASE_PASSWORD', 'llmstack'),
         'HOST': os.getenv('DATABASE_HOST', 'postgres'),
         'PORT': os.getenv('DATABASE_PORT', 5432),
-    },
+    }
 }
 
 VECTOR_DATABASES = {
     'default': {
-        'ENGINE': '{}'.format(
-            os.getenv('VECTOR_DATABASE_ENGINE', 'chroma'),
+        'ENGINE': f"{os.getenv('VECTOR_DATABASE_ENGINE', 'chroma')}",
+        'NAME': os.getenv(
+            'VECTOR_DATABASE_NAME',
+            './llmstack.chromadb',
         ),
-        'NAME': os.getenv('VECTOR_DATABASE_NAME', './llmstack.chromadb',),
         'HOST': os.getenv('VECTOR_DATABASE_HOST', 'http://weaviate:8080'),
         'USER': os.getenv('VECTOR_DATABASE_USERNAME', None),
         'PASSWORD': os.getenv('VECTOR_DATABASE_PASSWORD', None),

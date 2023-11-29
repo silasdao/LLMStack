@@ -37,7 +37,6 @@ def hydrate_input(input, values):
                 return template.render(values)
             except jinja2.exceptions.TemplateError as e:
                 logger.exception(e)
-                pass  # not a template, return as is
         return value
 
     def traverse(obj):

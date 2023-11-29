@@ -134,9 +134,7 @@ class S3FileDataSource(DataSourceProcessor[S3FileSchema]):
             document.content,
         ).decode()
 
-        data_url = 'data:{};name={};base64,{}'.format(
-            mime_type, file_name, base64_encoded_file_content,
-        )
+        data_url = f'data:{mime_type};name={file_name};base64,{base64_encoded_file_content}'
 
         mime_type, file_name, file_data = validate_parse_data_uri(data_url)
 
@@ -157,16 +155,27 @@ class S3FileDataSource(DataSourceProcessor[S3FileSchema]):
             data.data['file_data'], openai_key=self.openai_key, file_name=data.data['file_name'],
         )
 
-        if data.data['mime_type'] == 'text/csv':
-            docs = [
-                Document(page_content_key=self.get_content_key(), page_content=t, metadata={'source': data.data['file_name']}) for t in CSVTextSplitter(
-                    chunk_size=2, length_function=CSVTextSplitter.num_tokens_from_string_using_tiktoken,
+        return (
+            [
+                Document(
+                    page_content_key=self.get_content_key(),
+                    page_content=t,
+                    metadata={'source': data.data['file_name']},
+                )
+                for t in CSVTextSplitter(
+                    chunk_size=2,
+                    length_function=CSVTextSplitter.num_tokens_from_string_using_tiktoken,
                 ).split_text(file_text)
             ]
-        else:
-            docs = [
-                Document(page_content_key=self.get_content_key(), page_content=t, metadata={'source': data.data['file_name']}) for t in SpacyTextSplitter(
+            if data.data['mime_type'] == 'text/csv'
+            else [
+                Document(
+                    page_content_key=self.get_content_key(),
+                    page_content=t,
+                    metadata={'source': data.data['file_name']},
+                )
+                for t in SpacyTextSplitter(
                     chunk_size=1500,
                 ).split_text(file_text)
             ]
-        return docs
+        )

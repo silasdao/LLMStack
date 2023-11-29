@@ -102,7 +102,7 @@ class DataSourceSearchProcessor(ApiProcessorInterface[DataSourceSearchInput, Dat
                 logger.exception('Error while searching')
                 raise Exception('Error while searching')
 
-        if documents and len(documents) > 0:
+        if documents:
             if 'score' in documents[0].metadata:
                 documents = sorted(documents, key=lambda d: d.metadata['score'], reverse=True)[
                     :self._config.document_limit]
@@ -136,6 +136,4 @@ class DataSourceSearchProcessor(ApiProcessorInterface[DataSourceSearchInput, Dat
                 answers=answers, answers_text=answer_text,
             ),
         )
-        output = self._output_stream.finalize()
-
-        return output
+        return self._output_stream.finalize()

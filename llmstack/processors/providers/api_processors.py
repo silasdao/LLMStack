@@ -12,8 +12,12 @@ class ApiProcessorFactory:
     @staticmethod
     def get_api_processor(processor_slug, provider_slug=None) -> ApiProcessorInterface:
         subclasses = ApiProcessorInterface.__subclasses__()
-        for subclass in subclasses:
-            # Convert to lowercase to avoid case sensitivity
-            if subclass.slug() == processor_slug and subclass.provider_slug() == provider_slug:
-                return subclass
-        return None
+        return next(
+            (
+                subclass
+                for subclass in subclasses
+                if subclass.slug() == processor_slug
+                and subclass.provider_slug() == provider_slug
+            ),
+            None,
+        )

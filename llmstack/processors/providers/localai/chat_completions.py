@@ -136,22 +136,21 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionInput, ChatCompletions
 
         chat_messages = [
             {"role": "system", "content": system_message}] if system_message else []
-        for msg_entry in self._input.messages:
-            chat_messages.append(json.loads(msg_entry.json()))
-
+        chat_messages.extend(
+            json.loads(msg_entry.json()) for msg_entry in self._input.messages
+        )
         openai_functions = None
         if self._input.functions is not None:
-            openai_functions = []
-            for function in self._input.functions:
-                openai_functions.append(
-                    OpenAIFunctionCall(
-                        name=function.name,
-                        description=function.description,
-                        parameters=json.loads(
-                            function.parameters) if function.parameters is not None else {},
-                    ),
+            openai_functions = [
+                OpenAIFunctionCall(
+                    name=function.name,
+                    description=function.description,
+                    parameters=json.loads(function.parameters)
+                    if function.parameters is not None
+                    else {},
                 )
-
+                for function in self._input.functions
+            ]
         localai_chat_completions_api_processor_input = LocalAIChatCompletionsAPIProcessorInput(
             env=OpenAIAPIInputEnvironment(openai_api_key=api_key),
             system_message=system_message,
@@ -190,5 +189,4 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionInput, ChatCompletions
             async_to_sync(self._output_stream.write)(
                 ChatCompletionsOutput(choices=result.choices))
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

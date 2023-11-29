@@ -264,7 +264,7 @@ class DataSourceProcessor(ProcessorInterface[BaseInputType, None, None]):
                 if documents is not None:
                     documents.append(document)
 
-        if len(documents) > 0:
+        if documents:
             return documents[0].metadata, '\n'.join(list(map(lambda x: x.page_content, documents)))
         else:
             return {}, ''

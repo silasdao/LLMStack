@@ -20,11 +20,13 @@ class Coordinator(ThreadingActor):
         self._stream_errors = {}
 
         # Make sure there are not duplicate names or template_keys in actor_configs
-        assert len(set([actor_config.name for actor_config in actor_configs])) == len(
+        assert len({actor_config.name for actor_config in actor_configs}) == len(
             actor_configs,
         )
 
-        assert len(set([actor_config.template_key for actor_config in actor_configs])) == len(
+        assert len(
+            {actor_config.template_key for actor_config in actor_configs}
+        ) == len(
             actor_configs,
         )
 
@@ -72,7 +74,11 @@ class Coordinator(ThreadingActor):
                         self._actor_dependents[actor.name].add(
                             actor_config.name,
                         )
-                    elif not dependency.startswith('_inputs[') and not dependency == 'processor' and actor.template_key == '':
+                    elif (
+                        not dependency.startswith('_inputs[')
+                        and dependency != 'processor'
+                        and actor.template_key == ''
+                    ):
                         self._actor_dependencies[actor_config.name].add(
                             actor.name,
                         )
@@ -84,8 +90,8 @@ class Coordinator(ThreadingActor):
         self._idle_timer = ResettableTimer(TIMEOUT, self.on_timer_expire)
         self._idle_timer.start()
 
-        for actor in self._actor_dependencies:
-            if not self._actor_dependencies[actor] and actor not in ['input', 'output', 'bookkeeping']:
+        for actor, value in self._actor_dependencies.items():
+            if not value and actor not in ['input', 'output', 'bookkeeping']:
                 logger.info(
                     f'Actor {actor} has no dependencies. Sending BEGIN message')
                 self.actors[actor].tell(
@@ -125,8 +131,7 @@ class Coordinator(ThreadingActor):
 
     def on_timer_expire(self) -> None:
         logger.info(f'Coordinator {self.actor_urn} timed out')
-        output_actor_ref = self.actors.get('output')
-        if output_actor_ref:
+        if output_actor_ref := self.actors.get('output'):
             if len(self._stream_errors.keys()) > 0:
                 # We timed out because some actor in the chain errored out
                 errors = list(

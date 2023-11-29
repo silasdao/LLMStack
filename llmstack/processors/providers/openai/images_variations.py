@@ -94,6 +94,4 @@ class ImagesVariations(ApiProcessorInterface[ImagesVariationsInput, ImagesVariat
         async_to_sync(self._output_stream.write)(
             ImagesVariationsOutput(answer=response.answer),
         )
-        output = self._output_stream.finalize()
-
-        return output
+        return self._output_stream.finalize()

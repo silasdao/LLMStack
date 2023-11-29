@@ -48,8 +48,7 @@ class ExtraParams:
 def get_url_content_type(url):
     response = requests.head(url, allow_redirects=True, verify=False)
 
-    content_type = response.headers.get('Content-Type', '')
-    return content_type
+    return response.headers.get('Content-Type', '')
 
 
 def is_youtube_video_url(url):
@@ -63,14 +62,14 @@ def extract_text_elements(mime_type, data, file_name, charset='utf-8', extra_par
     elements = []
     if mime_type == 'application/pdf':
         elements = partition_pdf(file=data_fp)
-    elif mime_type == 'application/rtf' or mime_type == 'text/rtf':
+    elif mime_type in ['application/rtf', 'text/rtf']:
         elements = partition_text(text=rtf_to_text(data.decode(charset)))
     elif mime_type == 'text/plain':
         elements = partition_text(text=data.decode(charset))
     elif mime_type == 'application/json':
         elements = [Text(text=data.decode(charset),
                          metadata=ElementMetadata(filename=file_name))]
-    elif mime_type == 'text/csv' or mime_type == 'application/csv':
+    elif mime_type in ['text/csv', 'application/csv']:
         elements = [
             Text(
                 text=data.decode(charset),
@@ -89,9 +88,9 @@ def extract_text_elements(mime_type, data, file_name, charset='utf-8', extra_par
         raise Exception(
             'Unsupported file type .ppt please convert it to .pptx',
         )
-    elif mime_type == 'image/jpeg' or mime_type == 'image/png':
+    elif mime_type in ['image/jpeg', 'image/png']:
         elements = partition_image(file=data_fp)
-    elif mime_type == 'audio/mpeg' or mime_type == 'audio/mp3':
+    elif mime_type in ['audio/mpeg', 'audio/mp3']:
         audio_text = '\n\n'.join(
             partition_audio(
                 data, mime_type=mime_type, openai_key=extra_params.openai_key, file_name=file_name,
@@ -103,7 +102,7 @@ def extract_text_elements(mime_type, data, file_name, charset='utf-8', extra_par
                 metadata=ElementMetadata(filename=file_name),
             ),
         ]
-    elif mime_type == 'video/mp4' or mime_type == 'video/mpeg':
+    elif mime_type in ['video/mp4', 'video/mpeg']:
         video_text = '\n\n'.join(
             partition_video(
                 data, mime_type=mime_type, openai_key=extra_params.openai_key, file_name=file_name,
@@ -139,13 +138,12 @@ def extract_text_elements(mime_type, data, file_name, charset='utf-8', extra_par
     # Merge elements depending on metadata page number
     merged_elements = []
     for element in elements:
-        if len(merged_elements) == 0:
+        if not merged_elements:
             merged_elements.append(element)
+        elif element.metadata.page_number == merged_elements[-1].metadata.page_number:
+            merged_elements[-1].text += f'\n{element.text}'
         else:
-            if element.metadata.page_number == merged_elements[-1].metadata.page_number:
-                merged_elements[-1].text += f'\n{element.text}'
-            else:
-                merged_elements.append(element)
+            merged_elements.append(element)
     return merged_elements
 
 
@@ -159,14 +157,12 @@ def extract_text_from_b64_json(mime_type, base64_encoded_data, file_name='filena
 
 def extract_text_from_url(url, extra_params: Optional[ExtraParams] = None):
     if is_youtube_video_url(url):
-        # Get Youtube video content from URL parse the content and return the text
-        text = '\n\n'.join(
+        return '\n\n'.join(
             partition_youtube_audio(
-                url=url, openai_key=extra_params.openai_key,
+                url=url,
+                openai_key=extra_params.openai_key,
             ),
         )
-        return text
-
     url_content_type = get_url_content_type(url=url)
     url_content_type_parts = url_content_type.split(';')
     mime_type = url_content_type_parts[0]

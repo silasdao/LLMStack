@@ -40,7 +40,7 @@ class TwilioVoiceAppRunner(AppRunner):
     
     def _get_input_data(self, twilio_request_payload):
         vendor_env = self.app_owner_profile.get_vendor_env()
-        
+
         input_data = {
             '_request': {
                 'CallSid': twilio_request_payload.get('CallSid', ''),
@@ -77,19 +77,18 @@ class TwilioVoiceAppRunner(AppRunner):
         if recording_url is None:
             raise Exception('Recording url not found in twilio request payload')
         if not recording_url.endswith('.mp3'):
-            recording_url = recording_url + '.mp3'
+            recording_url = f'{recording_url}.mp3'
             recording_filename = recording_url.split('/')[-1]
         response = requests.get(recording_url, auth=(self.twilio_account_sid, self.twilio_auth_token))
-        if response.status_code == 200:
-            mp3_content = response.content
-            # Encode the MP3 content as a base64 data URI
-            data_uri = f'data:audio/mp3;name={recording_filename};base64,' + base64.b64encode(mp3_content).decode()
-        else:
+        if response.status_code != 200:
             raise Exception('Error while downloading recording from twilio')
 
+        mp3_content = response.content
+            # Encode the MP3 content as a base64 data URI
+        data_uri = f'data:audio/mp3;name={recording_filename};base64,{base64.b64encode(mp3_content).decode()}'
         recording_text = '\n\n'.join([str(el) for el in extract_text_elements('audio/mp3', mp3_content, recording_filename, extra_params=ExtraParams(openai_key=vendor_env.get('openai_api_key', None)))])        
-            
-        
+
+
         return {
              'input': {
                  **input_data,

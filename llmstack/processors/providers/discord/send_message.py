@@ -68,7 +68,7 @@ class DiscordSendMessageProcessor(
     def _send_message(self, app_id: str, message: str, token: str) -> None:
         url = f"https://discord.com/api/v10/webhooks/{app_id}/{token}"
         http_processor = HttpAPIProcessor(configuration={'timeout': 60})
-        response = http_processor.process(
+        return http_processor.process(
             HttpAPIProcessorInput(
                 url=url,
                 method=HttpMethod.POST,
@@ -81,7 +81,6 @@ class DiscordSendMessageProcessor(
                 ),
             ).dict(),
         )
-        return response
 
     def process(self) -> dict:
         _env = self._env

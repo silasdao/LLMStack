@@ -42,7 +42,7 @@ class BaseSchema(BaseModel):
                             ui_schema[key][prop_key]['ui:widget'] = 'textarea'
                         elif schema[key][prop_key]['type'] == 'string':
                             ui_schema[key][prop_key]['ui:widget'] = 'text'
-                        elif schema[key][prop_key]['type'] == 'integer' or schema[key][prop_key]['type'] == 'number':
+                        elif schema[key][prop_key]['type'] in ['integer', 'number']:
                             ui_schema[key][prop_key]['ui:widget'] = 'updown'
                         elif schema[key][prop_key]['type'] == 'boolean':
                             ui_schema[key][prop_key]['ui:widget'] = 'checkbox'
@@ -92,7 +92,7 @@ class AppTypeInterface(Generic[AppConfigurationSchemaType]):
         return app_type_interface.__args__[0].get_ui_schema()
 
     @classmethod
-    def pre_save(self, app):
+    def pre_save(cls, app):
         return app
 
     @classmethod

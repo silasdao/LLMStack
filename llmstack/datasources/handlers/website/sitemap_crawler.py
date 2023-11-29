@@ -65,8 +65,7 @@ class SitemapCrawlerDataSource(DataSourceProcessor[SitemapURLSchema]):
         sitemap_urls = []
         try:
             sitmap_xml_urls = extract_urls_from_sitemap(entry.url)
-            for sitmap_xml_url in sitmap_xml_urls:
-                sitemap_urls.append(sitmap_xml_url)
+            sitemap_urls.extend(iter(sitmap_xml_urls))
         except Exception as e:
             logger.exception('Error in extracting urls from sitemap')
 
@@ -77,11 +76,13 @@ class SitemapCrawlerDataSource(DataSourceProcessor[SitemapURLSchema]):
         text = extract_text_from_url(
             url, extra_params=ExtraParams(openai_key=self.openai_key),
         )
-        docs = [
+        return [
             Document(
-                page_content_key=self.get_content_key(), page_content=t, metadata={
+                page_content_key=self.get_content_key(),
+                page_content=t,
+                metadata={
                     'source': url,
                 },
-            ) for t in SpacyTextSplitter(chunk_size=1500).split_text(text)
+            )
+            for t in SpacyTextSplitter(chunk_size=1500).split_text(text)
         ]
-        return docs

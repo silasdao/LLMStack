@@ -57,16 +57,12 @@ class ApiBackendSerializer(serializers.ModelSerializer):
     def get_input_ui_schema(self, obj):
         processor_cls = ApiProcessorFactory.get_api_processor(
             obj.slug, obj.api_provider.slug)
-        if processor_cls is None:
-            return {}
-        return processor_cls.get_input_ui_schema()
+        return {} if processor_cls is None else processor_cls.get_input_ui_schema()
 
     def get_output_ui_schema(self, obj):
         processor_cls = ApiProcessorFactory.get_api_processor(
             obj.slug, obj.api_provider.slug)
-        if processor_cls is None:
-            return {}
-        return processor_cls.get_output_ui_schema()
+        return {} if processor_cls is None else processor_cls.get_output_ui_schema()
 
     class Meta:
         model = ApiBackend

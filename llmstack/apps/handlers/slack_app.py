@@ -67,21 +67,23 @@ class SlackAppRunner(AppRunner):
         return AnonymousUser()
 
     def _get_slack_app_seession_id(self, slack_request_payload):
-        if slack_request_payload['type'] == 'event_callback' and 'event' in slack_request_payload:
-            thread_ts = None
-            session_identifier = None
-            if 'thread_ts' in slack_request_payload['event']:
-                thread_ts = slack_request_payload['event']['thread_ts']
-            elif 'ts' in slack_request_payload['event']:
-                thread_ts = slack_request_payload['event']['ts']
+        if (
+            slack_request_payload['type'] != 'event_callback'
+            or 'event' not in slack_request_payload
+        ):
+            return None
+        thread_ts = None
+        session_identifier = None
+        if 'thread_ts' in slack_request_payload['event']:
+            thread_ts = slack_request_payload['event']['thread_ts']
+        elif 'ts' in slack_request_payload['event']:
+            thread_ts = slack_request_payload['event']['ts']
 
-            if 'channel' in slack_request_payload['event']:
-                session_identifier = f"{slack_request_payload['event']['channel']}_{thread_ts}"
-            else:
-                session_identifier = f"{slack_request_payload['event']['user']}_{thread_ts}"
-            return generate_uuid(session_identifier)
-
-        return None
+        if 'channel' in slack_request_payload['event']:
+            session_identifier = f"{slack_request_payload['event']['channel']}_{thread_ts}"
+        else:
+            session_identifier = f"{slack_request_payload['event']['user']}_{thread_ts}"
+        return generate_uuid(session_identifier)
 
     def _is_slack_url_verification_request(self):
         return self.request.data.get('type') == 'url_verification'
@@ -213,7 +215,4 @@ class SlackAppRunner(AppRunner):
             actor_configs, csp, template,
         )
 
-        if self._is_slack_url_verification_request():
-            return output
-        else:
-            return {}
+        return output if self._is_slack_url_verification_request() else {}

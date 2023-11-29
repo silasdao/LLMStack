@@ -74,9 +74,13 @@ class WebsiteCrawlerDataSource(DataSourceProcessor[WebsiteCrawlerSchema]):
         logger.info(
             f'Processing url: {data.name}',
         )
-        docs = [
-            Document(page_content_key=self.get_content_key(), page_content=t, metadata={'source': data.name}) for t in SpacyTextSplitter(
+        return [
+            Document(
+                page_content_key=self.get_content_key(),
+                page_content=t,
+                metadata={'source': data.name},
+            )
+            for t in SpacyTextSplitter(
                 chunk_size=1500,
             ).split_text(data.data['html_partition'])
         ]
-        return docs

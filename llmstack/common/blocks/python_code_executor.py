@@ -77,9 +77,9 @@ class PythonCodeExecutorProcessor(ProcessorInterface[PythonCodeExecutorProcessor
     @staticmethod
     def custom_inplacevar(op, x, y):
         if op not in IOPERATOR_TO_STR.values():
-            raise Exception("'{} is not supported inplace variable'".format(op))
+            raise Exception(f"'{op} is not supported inplace variable'")
         glb = {"x": x, "y": y}
-        exec("x" + op + "y", glb)
+        exec(f"x{op}y", glb)
         return glb["x"]
         
 

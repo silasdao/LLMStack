@@ -72,5 +72,4 @@ class CompletionsProcessor(ApiProcessorInterface[CompletionsInput, CompletionsOu
                 CompletionsOutput(completion=chunk.completion)
             )
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

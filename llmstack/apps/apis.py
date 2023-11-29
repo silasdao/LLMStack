@@ -68,7 +68,14 @@ class AppTypeViewSet(viewsets.ViewSet):
 
 class AppViewSet(viewsets.ViewSet):
     def get_permissions(self):
-        if self.action == 'getByPublishedUUID' or self.action == 'run' or self.action == 'run_slack' or self.action == 'run_discord' or self.action == 'run_twiliosms' or self.action == 'run_twiliovoice':
+        if self.action in [
+            'getByPublishedUUID',
+            'run',
+            'run_slack',
+            'run_discord',
+            'run_twiliosms',
+            'run_twiliovoice',
+        ]:
             return [AllowAny()]
         return [IsAuthenticated()]
 
@@ -152,18 +159,23 @@ class AppViewSet(viewsets.ViewSet):
         )
 
         if version:
-            versioned_app_data = AppData.objects.filter(
-                app_uuid=app.uuid, version=version, is_draft=draft
-            ).first()
-            if versioned_app_data:
-                return DRFResponse(AppDataSerializer(versioned_app_data, context={'hide_details': False}).data)
-            else:
-                return DRFResponse(status=404, data={'message': 'Version not found'})
-        else:
-            queryset = AppData.objects.all().filter(
-                app_uuid=app.uuid).order_by('-created_at')
-            serializer = AppDataSerializer(queryset, many=True)
-            return DRFResponse(serializer.data)
+            return (
+                DRFResponse(
+                    AppDataSerializer(
+                        versioned_app_data, context={'hide_details': False}
+                    ).data
+                )
+                if (
+                    versioned_app_data := AppData.objects.filter(
+                        app_uuid=app.uuid, version=version, is_draft=draft
+                    ).first()
+                )
+                else DRFResponse(status=404, data={'message': 'Version not found'})
+            )
+        queryset = AppData.objects.all().filter(
+            app_uuid=app.uuid).order_by('-created_at')
+        serializer = AppDataSerializer(queryset, many=True)
+        return DRFResponse(serializer.data)
 
     @xframe_options_exempt
     def getByPublishedUUID(self, request, published_uuid):
@@ -174,28 +186,26 @@ class AppViewSet(viewsets.ViewSet):
             owner_profile.decrypt_value,
         ) if app.web_integration_config else None
 
-        # Only return the app if it is published and public or if the user is logged in and the owner
-        if app.is_published:
-            if app.owner == request.user or \
-                    (app.visibility == AppVisibility.PUBLIC or app.visibility == AppVisibility.UNLISTED) or \
-                (
+        if app.owner == request.user or \
+                        (app.visibility == AppVisibility.PUBLIC or app.visibility == AppVisibility.UNLISTED) or \
+                    (
                         request.user.is_authenticated and ((app.visibility == AppVisibility.ORGANIZATION and Profile.objects.get(user=app.owner).organization == Profile.objects.get(user=request.user).organization) or
                                                            (request.user.email in app.read_accessible_by or request.user.email in app.write_accessible_by))
                     ):
+            if app.is_published:
                 serializer = AppSerializer(
                     instance=app, request_user=request.user,
                 )
                 csp = 'frame-ancestors *'
                 if web_config and 'allowed_sites' in web_config and len(web_config['allowed_sites']) > 0 and any(web_config['allowed_sites']):
-                    csp = 'frame-ancestors ' + \
-                        ' '.join(
-                            list(
-                                filter(
-                                    lambda x: x != '' and x !=
-                                    None, web_config['allowed_sites'],
-                                ),
-                            ),
+                    csp = 'frame-ancestors ' + ' '.join(
+                        list(
+                            filter(
+                                lambda x: x not in ['', None],
+                                web_config['allowed_sites'],
+                            )
                         )
+                    )
                 return DRFResponse(data=serializer.data, status=200, headers={'Content-Security-Policy': csp})
 
         if app.visibility == AppVisibility.ORGANIZATION:
@@ -231,8 +241,7 @@ class AppViewSet(viewsets.ViewSet):
     def getTemplates(self, request, slug=None):
         json_data = None
         if slug:
-            object = get_app_template_by_slug(slug)
-            if object:
+            if object := get_app_template_by_slug(slug):
                 object_dict = object.dict(exclude_none=True)
                 # For backward compatibility with old app templates
                 for page in object_dict['pages']:
@@ -389,9 +398,9 @@ class AppViewSet(viewsets.ViewSet):
     def patch(self, request, uid):
         app = get_object_or_404(App, uuid=uuid.UUID(uid))
         app_owner_profile = get_object_or_404(Profile, user=app.owner)
-        if app.owner != request.user and not (
-            app.is_published == True
-            and request.user.email in app.write_accessible_by
+        if app.owner != request.user and (
+            app.is_published != True
+            or request.user.email not in app.write_accessible_by
         ):
             return DRFResponse(status=403)
 
@@ -420,9 +429,9 @@ class AppViewSet(viewsets.ViewSet):
             'output_template': request.data['output_template'] if 'output_template' in request.data else {},
             'processors': request.data['processors'] if 'processors' in request.data else []
         }
-        versioned_app_data = AppData.objects.filter(
-            app_uuid=app.uuid, is_draft=True).first()
-        if versioned_app_data:
+        if versioned_app_data := AppData.objects.filter(
+            app_uuid=app.uuid, is_draft=True
+        ).first():
             versioned_app_data.comment = comment
             versioned_app_data.data = app_data
             versioned_app_data.is_draft = draft

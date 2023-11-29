@@ -203,22 +203,16 @@ class AbstractProfile(models.Model):
             return None
 
     def get_vendor_key(self, attrname):
-        encrypted_key = None
-        if hasattr(self, attrname):
-            encrypted_key = getattr(self, attrname)
-
-        if self.organization and self.organization.settings:
-            # User belongs to an organization, check if the organization has a key
-            org_key = self.organization.settings.get_vendor_key(attrname)
-            if org_key:
-                return org_key
-            elif not org_key and self.organization.settings.allow_user_keys:
-                return self._vendor_key_or_promptly_default(attrname, encrypted_key)
-            else:
-                return None
-        else:
+        encrypted_key = getattr(self, attrname) if hasattr(self, attrname) else None
+        if not self.organization or not self.organization.settings:
             # User does not belong to an organization, use user key
             return self._vendor_key_or_promptly_default(attrname, encrypted_key)
+        if org_key := self.organization.settings.get_vendor_key(attrname):
+            return org_key
+        elif self.organization.settings.allow_user_keys:
+            return self._vendor_key_or_promptly_default(attrname, encrypted_key)
+        else:
+            return None
 
     def get_vendor_env(self):
         return {
@@ -257,10 +251,10 @@ class AbstractProfile(models.Model):
         self.save(update_fields=['token'])
 
     def salt(self):
-        salt_key = settings.CIPHER_KEY_SALT
-        if not salt_key:
+        if salt_key := settings.CIPHER_KEY_SALT:
+            return f'salt_{salt_key}'.encode('utf-8')
+        else:
             raise Exception()
-        return 'salt_{}'.format(salt_key).encode('utf-8')
 
     @staticmethod
     def get_cipher(token, salt):
@@ -272,8 +266,7 @@ class AbstractProfile(models.Model):
             backend=default_backend(),
         )
         key = base64.urlsafe_b64encode(kdf.derive(token.encode()))
-        cipher = Fernet(key)
-        return cipher
+        return Fernet(key)
 
     def encrypt_value(self, value):
         if not value:

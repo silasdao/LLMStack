@@ -107,5 +107,4 @@ class ElevenLabsTextToSpeechProcessor(ApiProcessorInterface[TextToSpeechInput, T
                 output_data.getvalue()).decode('utf-8')),
         )
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

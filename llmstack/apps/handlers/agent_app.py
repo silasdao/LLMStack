@@ -17,21 +17,31 @@ logger = logging.getLogger(__name__)
 class AgentRunner(AppRunner):
     def _get_processors_as_functions(self):
         functions = []
-        processor_classes = {}
-
-        for processor_class in ApiProcessorInterface.__subclasses__():
-            processor_classes[(processor_class.provider_slug(),
-                               processor_class.slug())] = processor_class
-
-        for processor in self.app_data['processors'] if self.app_data and 'processors' in self.app_data else []:
-            if (processor['provider_slug'], processor['processor_slug']) not in processor_classes:
-                continue
-
-            functions.append({
+        processor_classes = {
+            (
+                processor_class.provider_slug(),
+                processor_class.slug(),
+            ): processor_class
+            for processor_class in ApiProcessorInterface.__subclasses__()
+        }
+        functions.extend(
+            {
                 'name': processor['id'],
                 'description': processor['description'],
-                'parameters': json.loads(processor_classes[(processor['provider_slug'], processor['processor_slug'])].get_input_schema()),
-            })
+                'parameters': json.loads(
+                    processor_classes[
+                        (processor['provider_slug'], processor['processor_slug'])
+                    ].get_input_schema()
+                ),
+            }
+            for processor in (
+                self.app_data['processors']
+                if self.app_data and 'processors' in self.app_data
+                else []
+            )
+            if (processor['provider_slug'], processor['processor_slug'])
+            in processor_classes
+        )
         return functions
 
     def run_app(self):

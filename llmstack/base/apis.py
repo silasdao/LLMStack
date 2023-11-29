@@ -34,9 +34,10 @@ class ProfileViewSet(viewsets.ViewSet):
     def get_flags(self, request):
         try:
             flags = get_flags(sources=settings.FLAG_SOURCES)
-            flag_values = {}
-            for flag_name, flag in flags.items():
-                flag_values[flag_name] = flag.check_state(request=request)
+            flag_values = {
+                flag_name: flag.check_state(request=request)
+                for flag_name, flag in flags.items()
+            }
             return DRFResponse(flag_values)
         except Exception as e:
             logger.exception(e)

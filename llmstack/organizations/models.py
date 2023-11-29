@@ -151,10 +151,10 @@ class OrganizationSettings(models.Model):
         return None
 
     def salt(self):
-        salt_key = settings.CIPHER_KEY_SALT
-        if not salt_key:
+        if salt_key := settings.CIPHER_KEY_SALT:
+            return f'salt_{salt_key}'.encode('utf-8')
+        else:
             raise Exception()
-        return 'salt_{}'.format(salt_key).encode('utf-8')
 
     @staticmethod
     def get_cipher(token, salt):
@@ -166,8 +166,7 @@ class OrganizationSettings(models.Model):
             backend=default_backend(),
         )
         key = base64.urlsafe_b64encode(kdf.derive(token.encode()))
-        cipher = Fernet(key)
-        return cipher
+        return Fernet(key)
 
     def encrypt_value(self, value):
         if not value:

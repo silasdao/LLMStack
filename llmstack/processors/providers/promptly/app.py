@@ -52,11 +52,10 @@ class PromptlyAppProcessor(ApiProcessorInterface[PromptlyAppProcessorInput, Prom
         }
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Token " + PROMPTLY_TOKEN,
+            "Authorization": f"Token {PROMPTLY_TOKEN}",
         }
         response = requests.request("POST", url, headers=headers, json=payload)
         async_to_sync(output_stream.write)(
             PromptlyAppProcessorOutput(output=response.text.encode('utf8')),
         )
-        output = output_stream.finalize()
-        return output
+        return output_stream.finalize()

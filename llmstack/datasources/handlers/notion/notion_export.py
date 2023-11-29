@@ -86,12 +86,10 @@ class NotionExportDataSource(DataSourceProcessor[NotionExportSchema]):
             f"Processing file: {data.data['file_name']} mime_type: {data.data['mime_type']}",
         )
 
-        docs = extract_documents(
+        return extract_documents(
             file_data=data.data['file_data'],
             content_key=NotionExportSchema.get_content_key(),
             mime_type=data.data['mime_type'],
             file_name=data.data['file_name'],
             metadata={'source': data.data['file_name']},
         )
-
-        return docs

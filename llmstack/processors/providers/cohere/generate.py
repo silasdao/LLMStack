@@ -73,6 +73,4 @@ class Generate(ApiProcessorInterface[GenerateInput, GenerateOutput, GenerateConf
                 metadata=result.metadata, choices=result.choices,
             ),
         )
-        output = self._output_stream.finalize()
-
-        return output
+        return self._output_stream.finalize()

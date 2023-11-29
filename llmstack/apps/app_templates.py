@@ -24,8 +24,11 @@ class AppTemplateFactory:
     @staticmethod
     def get_app_template_handler(app_template: AppTemplate) -> AppTemplateInterface:
         subclasses = AppTemplateInterface.__subclasses__()
-        for subclass in subclasses:
-            if subclass.slug() == app_template.slug.lower():
-                return subclass
-
-        return None
+        return next(
+            (
+                subclass
+                for subclass in subclasses
+                if subclass.slug() == app_template.slug.lower()
+            ),
+            None,
+        )

@@ -203,30 +203,32 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionsInput, ChatCompletion
         return 'openai'
 
     def session_data_to_persist(self) -> dict:
-        if self._config.retain_history and self._config.auto_prune_chat_history:
-            messages = []
-            for message in self._chat_history:
-                if isinstance(message, ChatMessage):
-                    msg_dict = message.dict()
-                    messages.append(
-                        {'role': msg_dict['role'],
-                            'content': msg_dict['content']},
-                    )
-                elif isinstance(message, dict):
-                    messages.append(
-                        {'role': message['role'],
-                            'content': message['content']},
-                    )
-                else:
-                    raise Exception('Invalid chat history')
+        if (
+            not self._config.retain_history
+            or not self._config.auto_prune_chat_history
+        ):
+            return {'chat_history': self._chat_history}
+        messages = []
+        for message in self._chat_history:
+            if isinstance(message, ChatMessage):
+                msg_dict = message.dict()
+                messages.append(
+                    {'role': msg_dict['role'],
+                        'content': msg_dict['content']},
+                )
+            elif isinstance(message, dict):
+                messages.append(
+                    {'role': message['role'],
+                        'content': message['content']},
+                )
+            else:
+                raise Exception('Invalid chat history')
 
-            # Prune chat history
-            while (num_tokens_from_messages(messages) > self._config.max_tokens) and len(messages) > 1:
-                messages.pop(0)
+        # Prune chat history
+        while (num_tokens_from_messages(messages) > self._config.max_tokens) and len(messages) > 1:
+            messages.pop(0)
 
-            return {'chat_history': messages}
-
-        return {'chat_history': self._chat_history}
+        return {'chat_history': messages}
 
     def process(self) -> dict:
         _env = self._env
@@ -244,17 +246,16 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionsInput, ChatCompletion
 
         openai_functions = None
         if self._input.functions is not None:
-            openai_functions = []
-            for function in self._input.functions:
-                openai_functions.append(
-                    OpenAIFunctionCall(
-                        name=function.name,
-                        description=function.description,
-                        parameters=json.loads(
-                            function.parameters) if function.parameters is not None else {},
-                    ),
+            openai_functions = [
+                OpenAIFunctionCall(
+                    name=function.name,
+                    description=function.description,
+                    parameters=json.loads(function.parameters)
+                    if function.parameters is not None
+                    else {},
                 )
-
+                for function in self._input.functions
+            ]
         openai_chat_completions_api_processor_input = OpenAIChatCompletionsAPIProcessorInput(
             env=_env, system_message=system_message, chat_history=chat_history, messages=self._input.messages, functions=openai_functions,
         )
@@ -264,7 +265,12 @@ class ChatCompletions(ApiProcessorInterface[ChatCompletionsInput, ChatCompletion
         )
 
         for result in result_iter:
-            if result.choices[0].role == None and result.choices[0].content == None and result.choices[0].function_call == None and result.choices[0].name == None:
+            if (
+                result.choices[0].role is None
+                and result.choices[0].content is None
+                and result.choices[0].function_call is None
+                and result.choices[0].name is None
+            ):
                 continue
             async_to_sync(self._output_stream.write)(
                 ChatCompletionsOutput(choices=result.choices),

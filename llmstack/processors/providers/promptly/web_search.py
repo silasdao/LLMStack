@@ -99,6 +99,4 @@ class WebSearch(ApiProcessorInterface[WebSearchInput, WebSearchOutput, WebSearch
             results=results
         ))
 
-        output = output_stream.finalize()
-
-        return output
+        return output_stream.finalize()

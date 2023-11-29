@@ -22,15 +22,13 @@ def verify_request_signature(app: Any, base_url: str, headers: dict, raw_body: b
     signature = headers.get('X-TWILIO-SIGNATURE')
     if not signature:
         return False
-    
+
     validator = RequestValidator(app.twilio_config.auth_token)
     request_valid = validator.validate(
         f'{base_url}/api/apps/{str(app.uuid)}/twiliosms/run',
         'POST',
         signature)
-    if not request_valid:
-        return False
-    return True
+    return bool(request_valid)
 
 class TwilioSmsAppRunner(AppRunner):
     def app_init(self):
@@ -75,12 +73,14 @@ class TwilioSmsAppRunner(AppRunner):
                 'ApiVersion': twilio_request_payload.get('ApiVersion', ''),
             },
         }
-        
+
         return {
-             'input': {
-                 **input_data,             
-                 **dict(zip(list(map(lambda x: x['name'], self.app_data['input_fields'])), [twilio_request_payload.get('Body', '')] * len(self.app_data['input_fields']) )),
-                 },
+            'input': input_data
+            | zip(
+                list(map(lambda x: x['name'], self.app_data['input_fields'])),
+                [twilio_request_payload.get('Body', '')]
+                * len(self.app_data['input_fields']),
+            )
         }
     
     def _get_twilio_processor_actor_configs(self, input_data):

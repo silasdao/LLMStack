@@ -30,30 +30,27 @@ class GuidancePreset(str, Enum):
 
 
 def get_guidance_preset_enum(preset):
-    if preset == None:
-        return generation.GUIDANCE_PRESET_NONE
-
     return generation.GUIDANCE_PRESET_NONE
 
 
 def get_sampler_grpc_enum(sampler):
-    if sampler == None:
+    if sampler is None:
         return generation.SAMPLER_K_DPMPP_2M
     if sampler == 'ddim':
         return generation.SAMPLER_DDIM
-    elif sampler == 'plms':
-        return generation.SAMPLER_DDPM
+    elif sampler == 'k_dpm_2':
+        return generation.SAMPLER_K_DPM_2
+    elif sampler == 'k_dpm_2_ancestral':
+        return generation.SAMPLER_K_DPM_2_ANCESTRAL
+    elif sampler == 'k_dpmpp_2m':
+        return generation.SAMPLER_K_DPMPP_2M
+    elif sampler == 'k_dpmpp_2s_ancestral':
+        return generation.SAMPLER_K_DPMPP_2S_ANCESTRAL
     elif sampler == 'k_euler':
         return generation.SAMPLER_K_EULER
     elif sampler == 'k_euler_ancestral':
         return generation.SAMPLER_K_EULER_ANCESTRAL
     elif sampler == 'k_heun':
         return generation.SAMPLER_K_HEUN
-    elif sampler == 'k_dpm_2':
-        return generation.SAMPLER_K_DPM_2
-    elif sampler == 'k_dpm_2_ancestral':
-        return generation.SAMPLER_K_DPM_2_ANCESTRAL
-    elif sampler == 'k_dpmpp_2s_ancestral':
-        return generation.SAMPLER_K_DPMPP_2S_ANCESTRAL
-    elif sampler == 'k_dpmpp_2m':
-        return generation.SAMPLER_K_DPMPP_2M
+    elif sampler == 'plms':
+        return generation.SAMPLER_DDPM

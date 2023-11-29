@@ -62,7 +62,7 @@ class PostgresReader(ProcessorInterface[PostgresReaderInput, PostgresOutput, Pos
             column_name = col[0]
             while column_name in column_names:
                 duplicates_counters[col[0]] += 1
-                column_name = "{}{}".format(col[0], duplicates_counters[col[0]])
+                column_name = f"{col[0]}{duplicates_counters[col[0]]}"
 
             column_names.add(column_name)
             new_columns.append({"name": column_name, "friendly_name": column_name, "type": col[1]})
@@ -74,15 +74,14 @@ class PostgresReader(ProcessorInterface[PostgresReaderInput, PostgresOutput, Pos
         cursor = connection.cursor()
         try:
             cursor.execute(input.sql)
-            if cursor.description is not None:
-                columns = self.fetch_columns([(i[0], types_map.get(i[1], None)) for i in cursor.description])
-                rows = [dict(zip((column["name"] for column in columns), row)) for row in cursor]
-
-                data = {"columns": columns, "rows": rows}
-                json_data = json.dumps(data, cls=PostgreSQLJSONEncoder)
-            else:
+            if cursor.description is None:
                 raise Exception("Query completed but it returned no data.")
+            columns = self.fetch_columns([(i[0], types_map.get(i[1], None)) for i in cursor.description])
+            rows = [dict(zip((column["name"] for column in columns), row)) for row in cursor]
+
+            data = {"columns": columns, "rows": rows}
+            json_data = json.dumps(data, cls=PostgreSQLJSONEncoder)
         except Exception as e:
             connection.cancel()
-            raise e 
+            raise e
         return PostgresOutput(documents=[DataDocument(content=json_data, content_text=json_data, metadata={"mime_type": "application/json"})])

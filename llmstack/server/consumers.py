@@ -47,7 +47,7 @@ def _build_request_from_input(post_data, scope):
 class AppConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.app_id = self.scope['url_route']['kwargs']['app_id']
-        self.preview = True if 'preview' in self.scope['url_route']['kwargs'] else False
+        self.preview = 'preview' in self.scope['url_route']['kwargs']
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -121,8 +121,7 @@ class ConnectionConsumer(AsyncWebsocketConsumer):
                         await self.send(text_data=json.dumps(
                             {'event': 'success'}))
                     elif isinstance(c, dict):
-                        connection = c.get('connection', None)
-                        if connection:
+                        if connection := c.get('connection', None):
                             await self.connection_activation_actor.set_connection(connection)
                         if c.get('error', None):
                             await self.send(text_data=json.dumps(

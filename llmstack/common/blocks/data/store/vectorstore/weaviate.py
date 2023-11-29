@@ -37,10 +37,7 @@ def generate_where_filter(input_string):
 
 
 def handle_operands(operands):
-    result = []
-    for operand in operands:
-        result.append(generate_where_filter(operand.strip()))
-    return result
+    return [generate_where_filter(operand.strip()) for operand in operands]
 
 
 def convert_to_json(input_string):
@@ -251,8 +248,9 @@ class Weaviate(VectorStoreInterface):
         nearText = {'concepts': [document_query.query]}
         whereFilter = {}
         properties = [document_query.page_content_key]
-        for key in document_query.metadata.get('additional_properties', []):
-            properties.append(key)
+        properties.extend(
+            iter(document_query.metadata.get('additional_properties', []))
+        )
         additional_metadata_properties = document_query.metadata.get(
             'metadata_properties', ['id', 'certainty', 'distance'])
 
@@ -267,7 +265,7 @@ class Weaviate(VectorStoreInterface):
                     document_query.search_filters,
                 )
             except Exception as e:
-                logger.error('Error in generating where filter: %s' % e)
+                logger.error(f'Error in generating where filter: {e}')
 
         try:
             query_obj = self.client.query.get(index_name, properties)
@@ -277,7 +275,7 @@ class Weaviate(VectorStoreInterface):
                 document_query.limit,
             ).with_additional(additional_metadata_properties).do()
         except Exception as e:
-            logger.error('Error in similarity search: %s' % e)
+            logger.error(f'Error in similarity search: {e}')
             raise e
 
         if 'data' not in query_response or 'Get' not in query_response['data'] or index_name not in query_response['data']['Get']:
@@ -291,16 +289,17 @@ class Weaviate(VectorStoreInterface):
             return result
 
         for res in query_response['data']['Get'][index_name]:
-            additional_properties = {}
-
             text = res.pop(document_query.page_content_key)
             _document_search_properties = res.pop('_additional')
-            for document_property in document_query.metadata.get('additional_properties', []):
-                if document_property in res:
-                    additional_properties[document_property] = res.pop(
-                        document_property,
-                    )
-
+            additional_properties = {
+                document_property: res.pop(
+                    document_property,
+                )
+                for document_property in document_query.metadata.get(
+                    'additional_properties', []
+                )
+                if document_property in res
+            }
             result.append(
                 Document(
                     page_content_key=document_query.page_content_key, page_content=text, metadata={
@@ -314,9 +313,9 @@ class Weaviate(VectorStoreInterface):
         result = []
         whereFilter = {}
         properties = [document_query.page_content_key]
-        for key in document_query.metadata.get('additional_properties', []):
-            properties.append(key)
-
+        properties.extend(
+            iter(document_query.metadata.get('additional_properties', []))
+        )
         if document_query.search_filters:
             # Build weaviate where filter from search_filters string
             # Example: "source == website_crawler || source == test"
@@ -325,7 +324,7 @@ class Weaviate(VectorStoreInterface):
                     document_query.search_filters,
                 )
             except Exception as e:
-                logger.error('Error in generating where filter: %s' % e)
+                logger.error(f'Error in generating where filter: {e}')
 
         try:
             query_obj = self.client.query.get(index_name, properties)
@@ -335,7 +334,7 @@ class Weaviate(VectorStoreInterface):
                 document_query.limit,
             ).with_additional(['id', 'score']).do()
         except Exception as e:
-            logger.error('Error in similarity search: %s' % e)
+            logger.error(f'Error in similarity search: {e}')
             raise e
 
         if 'data' not in query_response or 'Get' not in query_response['data'] or index_name not in query_response['data']['Get']:
@@ -349,16 +348,17 @@ class Weaviate(VectorStoreInterface):
             return result
 
         for res in query_response['data']['Get'][index_name]:
-            additional_properties = {}
-
             text = res.pop(document_query.page_content_key)
             _document_search_properties = res.pop('_additional')
-            for document_property in document_query.metadata.get('additional_properties', []):
-                if document_property in res:
-                    additional_properties[document_property] = res.pop(
-                        document_property,
-                    )
-
+            additional_properties = {
+                document_property: res.pop(
+                    document_property,
+                )
+                for document_property in document_query.metadata.get(
+                    'additional_properties', []
+                )
+                if document_property in res
+            }
             result.append(
                 Document(
                     page_content_key=document_query.page_content_key, page_content=text, metadata={

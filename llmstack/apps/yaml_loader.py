@@ -42,7 +42,7 @@ def get_input_model_from_fields(name: str, input_fields: list) -> Type['BaseMode
     fields = {}
     for field in input_fields:
         field_type = field['type'] if 'type' in field else 'string'
-        datatype = datatype_map[field_type] if field_type in datatype_map else str
+        datatype = datatype_map.get(field_type, str)
 
         if field_type == 'file':
             field['widget'] = 'file'
@@ -121,9 +121,9 @@ def get_app_templates_from_contrib() -> List[AppTemplate]:
     if isinstance(settings.APP_TEMPLATES_DIR, str):
         for file in os.listdir(settings.APP_TEMPLATES_DIR):
             if file.endswith('.yml'):
-                app_template = get_app_template_from_yaml(
-                    os.path.join(settings.APP_TEMPLATES_DIR, file))
-                if app_template:
+                if app_template := get_app_template_from_yaml(
+                    os.path.join(settings.APP_TEMPLATES_DIR, file)
+                ):
                     app_templates.append(app_template)
 
     elif isinstance(settings.APP_TEMPLATES_DIR, list):
@@ -132,9 +132,9 @@ def get_app_templates_from_contrib() -> List[AppTemplate]:
                 continue
             for file in os.listdir(dir):
                 if file.endswith('.yml'):
-                    app_template = get_app_template_from_yaml(
-                        os.path.join(dir, file))
-                    if app_template:
+                    if app_template := get_app_template_from_yaml(
+                        os.path.join(dir, file)
+                    ):
                         app_templates.append(app_template)
 
     cache.set('app_templates', app_templates)
@@ -146,7 +146,11 @@ def get_app_template_by_slug(slug: str) -> dict:
     """
     Returns an app template by slug.
     """
-    for app_template in get_app_templates_from_contrib():
-        if app_template.slug == slug:
-            return app_template
-    return None
+    return next(
+        (
+            app_template
+            for app_template in get_app_templates_from_contrib()
+            if app_template.slug == slug
+        ),
+        None,
+    )

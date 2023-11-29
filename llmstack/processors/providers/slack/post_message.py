@@ -19,20 +19,18 @@ logger = logging.getLogger(__name__)
 
 
 def traverse_children(element):
-    formatted_text = ''
-
     if isinstance(element, NavigableString):
         return element
 
-    if element.name == 'b' or element.name == 'strong':
+    if element.name in ['b', 'strong']:
         prefix, suffix = '*', '*'
-    elif element.name == 'i' or element.name == 'em':
+    elif element.name in ['i', 'em']:
         prefix, suffix = '_', '_'
     else:
         prefix, suffix = '', ''
-    for child in element.children:
-        formatted_text += traverse_children(child)
-
+    formatted_text = ''.join(
+        traverse_children(child) for child in element.children
+    )
     return prefix + formatted_text + suffix
 
 
@@ -68,9 +66,8 @@ def process_html_element(element):
         for block in field_blocks:
             if block['type'] in ['image', 'video']:
                 sibling_block.append(block)
-            else:
-                if 'text' in block and block['text']:
-                    section_block.append(block)
+            elif 'text' in block and block['text']:
+                section_block.append(block)
         block = {
             'type': 'section',
             'fields': section_block,
@@ -178,7 +175,7 @@ class SlackPostMessageProcessor(ApiProcessorInterface[SlackPostMessageInput, Sla
     def _send_message(self, message: str, channel: str, thread_ts: str, rich_text: Any, token: str) -> None:
         url = 'https://slack.com/api/chat.postMessage'
         http_processor = HttpAPIProcessor(configuration={'timeout': 60})
-        response = http_processor.process(
+        return http_processor.process(
             HttpAPIProcessorInput(
                 url=url,
                 method=HttpMethod.POST,
@@ -194,7 +191,6 @@ class SlackPostMessageProcessor(ApiProcessorInterface[SlackPostMessageInput, Sla
                 ),
             ).dict(),
         )
-        return response
 
     def process(self) -> dict:
         _env = self._env

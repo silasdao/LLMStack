@@ -21,12 +21,14 @@ class AppTypeFactory:
                 if subclass.slug().lower() == platform.lower():
                     return subclass
 
-        # Match with slug
-        for subclass in subclasses:
-            if subclass.slug() == app_type.slug.lower():
-                return subclass
-
-        return None
+        return next(
+            (
+                subclass
+                for subclass in subclasses
+                if subclass.slug() == app_type.slug.lower()
+            ),
+            None,
+        )
 
     @staticmethod
     def get_app_type_signature_verifier(app_id: str, platform: str = 'web'):

@@ -109,25 +109,22 @@ class ImageToImage(ApiProcessorInterface[ImageToImageInput, ImageToImageOutput, 
             raise Exception('Prompt and init_image are required')
 
         negative_prompt = self._input.negative_prompt
-        prompts = []
-        for p in prompt.split(','):
-            if p:
-                prompts.append(
-                    generation.Prompt(
-                        text=p, parameters=generation.PromptParameters(
-                            weight=1),
-                    ),
-                )
-
-        for p in negative_prompt.split(','):
-            if p:
-                prompts.append(
-                    generation.Prompt(
-                        text=p, parameters=generation.PromptParameters(
-                            weight=-1),
-                    ),
-                )
-
+        prompts = [
+            generation.Prompt(
+                text=p,
+                parameters=generation.PromptParameters(weight=1),
+            )
+            for p in prompt.split(',')
+            if p
+        ]
+        prompts.extend(
+            generation.Prompt(
+                text=p,
+                parameters=generation.PromptParameters(weight=-1),
+            )
+            for p in negative_prompt.split(',')
+            if p
+        )
         stability_api = client.StabilityInference(
             key=stability_api_key,
             verbose=True,
@@ -163,13 +160,9 @@ class ImageToImage(ApiProcessorInterface[ImageToImageInput, ImageToImageOutput, 
         result = []
         for entry in api_response['data']:
             if 'artifacts' in entry:
-                for image_data in entry['artifacts']:
-                    if image_data['type'] == 'ARTIFACT_IMAGE':
-                        result.append(
-                            'data:{};base64, {}'.format(
-                                image_data['mime'], image_data['binary'],
-                            ),
-                        )
-
-        response = ImageToImageOutput(answer=result)
-        return response
+                result.extend(
+                    f"data:{image_data['mime']};base64, {image_data['binary']}"
+                    for image_data in entry['artifacts']
+                    if image_data['type'] == 'ARTIFACT_IMAGE'
+                )
+        return ImageToImageOutput(answer=result)

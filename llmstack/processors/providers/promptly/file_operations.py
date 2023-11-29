@@ -150,6 +150,4 @@ class FileOperationsProcessor(ApiProcessorInterface[FileOperationsInput, FileOpe
                 text=text,
             ))
 
-        # Finalize the output stream
-        output = output_stream.finalize()
-        return output
+        return output_stream.finalize()

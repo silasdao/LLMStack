@@ -65,9 +65,8 @@ class Actor(ThreadingActor):
         if message.message_type == MessageType.STREAM_CLOSED:
             self._messages = {**self._messages, **message_and_key}
 
-        # Call input only when all the dependencies are met
-        if message.message_type == MessageType.STREAM_CLOSED and set(self.dependencies) == set(self._messages.keys()):
-            self.input(self._messages)
+            if set(self.dependencies) == set(self._messages.keys()):
+                self.input(self._messages)
 
         # If the message is for a tool, call the tool
         if message.message_type == MessageType.TOOL_INVOKE:

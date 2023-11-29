@@ -85,7 +85,7 @@ class DataSource(models.Model):
     )
 
     def __str__(self):
-        return self.name + ' (' + self.type.name + ')' + ' - ' + str(self.owner)
+        return f'{self.name} ({self.type.name}) - {str(self.owner)}'
 
     @property
     def profile(self):

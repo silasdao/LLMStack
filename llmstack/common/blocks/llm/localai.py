@@ -36,7 +36,7 @@ class LocalAICompletionsAPIProcessor(OpenAIAPIProcessor[LocalAICompletionsAPIPro
         return 'localai_completions_api_processor'
 
     def _get_api_url(self) -> dict:
-        return '{}/completions'.format(self.configuration.base_url)
+        return f'{self.configuration.base_url}/completions'
 
     def api_url(self) -> str:
         return self._get_api_url()
@@ -126,7 +126,7 @@ class LocalAIChatCompletionsAPIProcessorConfiguration(OpenAIAPIProcessorConfigur
 
 class LocalAIChatCompletionsAPIProcessor(OpenAIAPIProcessor[LocalAIChatCompletionsAPIProcessorInput, LocalAIChatCompletionsAPIProcessorOutput, LocalAIChatCompletionsAPIProcessorConfiguration]):
     def _get_api_url(self) -> str:
-        return '{}/chat/completions'.format(self.configuration.base_url)
+        return f'{self.configuration.base_url}/chat/completions'
 
     def api_url(self) -> str:
         return self._get_api_url()

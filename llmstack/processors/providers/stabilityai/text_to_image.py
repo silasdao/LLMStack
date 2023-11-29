@@ -119,25 +119,22 @@ class TextToImage(ApiProcessorInterface[TextToImageInput, TextToImageOutput, Tex
             raise Exception('Prompt is required')
 
         negative_prompt = self._input.negative_prompt
-        prompts = []
-        for p in prompt:
-            if p:
-                prompts.append(
-                    generation.Prompt(
-                        text=p, parameters=generation.PromptParameters(
-                            weight=1),
-                    ),
-                )
-
-        for p in negative_prompt:
-            if p:
-                prompts.append(
-                    generation.Prompt(
-                        text=p, parameters=generation.PromptParameters(
-                            weight=-1),
-                    ),
-                )
-
+        prompts = [
+            generation.Prompt(
+                text=p,
+                parameters=generation.PromptParameters(weight=1),
+            )
+            for p in prompt
+            if p
+        ]
+        prompts.extend(
+            generation.Prompt(
+                text=p,
+                parameters=generation.PromptParameters(weight=-1),
+            )
+            for p in negative_prompt
+            if p
+        )
         if self._config.seed == 0:
             self._config.seed = random.randint(0, 2147483646)
 
@@ -177,9 +174,11 @@ class TextToImage(ApiProcessorInterface[TextToImageInput, TextToImageOutput, Tex
                     if image_data['type'] == 'ARTIFACT_IMAGE':
                         async_to_sync(self._output_stream.write)(
                             TextToImageOutput(
-                                answer=(['' for _ in range(
-                                    image_count)] + ['data:{};base64,{}'.format(image_data['mime'], image_data['binary'])]),
-                            ),
+                                answer=['' for _ in range(image_count)]
+                                + [
+                                    f"data:{image_data['mime']};base64,{image_data['binary']}"
+                                ]
+                            )
                         )
                         image_count += 1
 

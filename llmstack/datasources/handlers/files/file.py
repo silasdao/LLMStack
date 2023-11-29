@@ -92,21 +92,28 @@ class FileDataSource(DataSourceProcessor[FileSchema]):
             input=UriInput(env=DataSourceEnvironmentSchema(openai_key=self.openai_key), uri=data_uri), configuration=UriConfiguration()
         )
 
-        file_text = ''
-        for doc in result.documents:
-            file_text += doc.content.decode() + '\n'
-
-        if data.data['mime_type'] == 'text/csv':
-            docs = [
-                Document(page_content_key=self.get_content_key(), page_content=t, metadata={'source': data.data['file_name']}) for t in CSVTextSplitter(
-                    chunk_size=2, length_function=CSVTextSplitter.num_tokens_from_string_using_tiktoken,
+        file_text = ''.join(doc.content.decode() + '\n' for doc in result.documents)
+        return (
+            [
+                Document(
+                    page_content_key=self.get_content_key(),
+                    page_content=t,
+                    metadata={'source': data.data['file_name']},
+                )
+                for t in CSVTextSplitter(
+                    chunk_size=2,
+                    length_function=CSVTextSplitter.num_tokens_from_string_using_tiktoken,
                 ).split_text(file_text)
             ]
-        else:
-            docs = [
-                Document(page_content_key=self.get_content_key(), page_content=t, metadata={'source': data.data['file_name']}) for t in SpacyTextSplitter(
+            if data.data['mime_type'] == 'text/csv'
+            else [
+                Document(
+                    page_content_key=self.get_content_key(),
+                    page_content=t,
+                    metadata={'source': data.data['file_name']},
+                )
+                for t in SpacyTextSplitter(
                     chunk_size=1500,
                 ).split_text(file_text)
             ]
-
-        return docs
+        )

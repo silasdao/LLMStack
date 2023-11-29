@@ -59,8 +59,7 @@ class TwilioCreateMessageProcessor(ApiProcessorInterface[TwilioCreateMessageInpu
                     'Body': message
                 }),
                 )
-        response = http_processor.process(input.dict()).dict()
-        return response
+        return http_processor.process(input.dict()).dict()
 
         
 

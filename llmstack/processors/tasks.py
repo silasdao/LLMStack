@@ -7,7 +7,11 @@ logger = logging.getLogger(__name__)
 
 
 def persist_history_task_internal(processors, bookkeeping_data_map):
-    if not 'input' in bookkeeping_data_map or (not 'output' in bookkeeping_data_map and not 'agent' in bookkeeping_data_map):
+    if (
+        'input' not in bookkeeping_data_map
+        or 'output' not in bookkeeping_data_map
+        and 'agent' not in bookkeeping_data_map
+    ):
         logger.error(
             f'Could not persist history {bookkeeping_data_map} for {processors} because input or output is missing',
         )

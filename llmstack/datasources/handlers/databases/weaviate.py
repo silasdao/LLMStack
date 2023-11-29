@@ -130,37 +130,39 @@ class WeaviateDataSource(DataSourceProcessor[WeaviateDatabaseSchema]):
         index_name = self._configuration.index_name
         additional_properties = self._configuration.additional_properties
 
-        result = self._weviate_client.similarity_search(
+        return self._weviate_client.similarity_search(
             index_name=index_name,
             document_query=DocumentQuery(
                 query=query,
                 page_content_key=self._configuration.content_property_name,
                 limit=kwargs.get('limit', 2),
-                metadata={'additional_properties': additional_properties,
-                          'metadata_properties': ['distance']},
+                metadata={
+                    'additional_properties': additional_properties,
+                    'metadata_properties': ['distance'],
+                },
                 search_filters=kwargs.get('search_filters', None),
             ),
             **kwargs
         )
-        return result
 
     def hybrid_search(self, query: str, **kwargs) -> List[dict]:
         index_name = self._configuration.index_name
         additional_properties = self._configuration.additional_properties
-        result = self._weviate_client.hybrid_search(
+        return self._weviate_client.hybrid_search(
             index_name=index_name,
             document_query=DocumentQuery(
                 alpha=kwargs.get('alpha', 0.75),
                 query=query,
                 page_content_key=self._configuration.content_property_name,
                 limit=kwargs.get('limit', 2),
-                metadata={'additional_properties': additional_properties,
-                          'metadata_properties': ['score']},
+                metadata={
+                    'additional_properties': additional_properties,
+                    'metadata_properties': ['score'],
+                },
                 search_filters=kwargs.get('search_filters', None),
             ),
             **kwargs
         )
-        return result
 
     def delete_entry(self, data: dict) -> None:
         raise NotImplementedError

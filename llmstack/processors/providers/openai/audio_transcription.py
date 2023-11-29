@@ -96,5 +96,4 @@ class AudioTranscription(ApiProcessorInterface[AudioTranscriptionInput, AudioTra
             AudioTranscriptionOutput(text=response.text),
         )
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

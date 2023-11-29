@@ -166,7 +166,7 @@ class EndpointViewSet(viewsets.ViewSet):
         api_backend_slug = request.data.get('api_backend_slug', None)
         api_provider_slug = request.data.get('api_provider_slug', None)
 
-        if api_backend_slug == None or api_provider_slug == None:
+        if api_backend_slug is None or api_provider_slug is None:
             return DRFResponse({'errors': ['Invalid API backend']}, status=500)
 
         request_user_agent = request.META.get(
@@ -322,9 +322,7 @@ class ApiBackendViewSet(viewsets.ViewSet):
 
     def list(self, request):
         providers = ApiProviderViewSet().list(request).data
-        providers_map = {}
-        for entry in providers:
-            providers_map[entry['slug']] = entry
+        providers_map = {entry['slug']: entry for entry in providers}
         processors = []
         for subclass in ApiProcessorInterface.__subclasses__():
             if f'{subclass.__module__}.{subclass.__qualname__}' in settings.PROCESSOR_EXCLUDE_LIST:
@@ -416,9 +414,7 @@ class HistoryViewSet(viewsets.ModelViewSet):
         count = request.data.get('count', 25)
         brief = request.data.get('brief', True)
 
-        if count > 100:
-            count = 100
-
+        count = min(count, 100)
         queryset = RunEntry.objects.all().filter(
             app_uuid=app_uuid, owner=request.user, created_at__lt=before).order_by('-created_at')[:count]
         response = StreamingHttpResponse(
@@ -446,20 +442,21 @@ class HistoryViewSet(viewsets.ModelViewSet):
         ).order_by('-latest_created_at').distinct()
 
         page = self.paginate_queryset(queryset)
-        if page is not None:
-            response = self.get_paginated_response(page)
-        else:
-            response = queryset
+        response = self.get_paginated_response(page) if page is not None else queryset
         return DRFResponse(response.data)
 
     def get(self, request, request_uuid):
-        object = RunEntry.objects.all().filter(
-            request_uuid=request_uuid, owner=request.user,
-        ).first()
-        if not object:
+        if (
+            object := RunEntry.objects.all()
+            .filter(
+                request_uuid=request_uuid,
+                owner=request.user,
+            )
+            .first()
+        ):
+            return DRFResponse(HistorySerializer(instance=object).data)
+        else:
             raise Http404('Invalid request uuid')
-
-        return DRFResponse(HistorySerializer(instance=object).data)
 
 
 class LoginView(APIView):
@@ -470,8 +467,7 @@ class LoginView(APIView):
         if serializer.is_valid():
             username = serializer.data.get('username')
             password = serializer.data.get('password')
-            user = authenticate(username=username, password=password)
-            if user:
+            if user := authenticate(username=username, password=password):
                 login(request=request, user=user)
                 return DRFResponse({'message': 'Login successful'})
 

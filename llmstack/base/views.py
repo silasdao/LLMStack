@@ -18,7 +18,7 @@ def index(request):
         app_id = request.path.split('/')[2]
         try:
             app = App.objects.get(published_uuid=uuid.UUID(app_id))
-            page_title = app.name + ' | LLMStack'
+            page_title = f'{app.name} | LLMStack'
         except App.DoesNotExist:
             pass
 

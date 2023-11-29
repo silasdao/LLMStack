@@ -23,8 +23,6 @@ def add_missing_app_types():
         except Exception as e:
             logger.error(
                 f"Error while loading app type: {subclass.slug()}")
-            pass
-
     # If app slug is already present, do not add it again
     from llmstack.apps.models import AppType
 

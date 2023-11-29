@@ -182,8 +182,6 @@ class TextChat(ApiProcessorInterface[TextChatInput, TextChatOutput, TextChatConf
                         docs.extend(future_result.result())
                     except Exception as e:
                         logger.error(f'Error fetching datasource docs: {e}')
-                        pass
-
         return docs
 
     def process(self) -> dict:
@@ -206,13 +204,13 @@ class TextChat(ApiProcessorInterface[TextChatInput, TextChatOutput, TextChatConf
                 self._context = self._context + '\nContent: ' + d.page_content
                 if self._config.show_citations:
                     self._context = self._context + '\nMetadata: ' + \
-                        ', '.join(f'{k}: {v}' for k, v in d.metadata.items())
+                            ', '.join(f'{k}: {v}' for k, v in d.metadata.items())
             # Remove invalid characters from docs
             self._context = self._context.replace('\u0000', '')
 
         instructions = self._config.instructions
         if self._config.show_citations:
-            instructions = instructions + ' ' + self._config.citation_instructions
+            instructions = f'{instructions} {self._config.citation_instructions}'
         system_message = {
             'role': 'system',
             'content': self._config.system_message_prefix,

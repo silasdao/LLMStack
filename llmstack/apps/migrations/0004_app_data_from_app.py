@@ -85,15 +85,15 @@ def build_app_data_from_app(app):
 
 class Migration(migrations.Migration):
 
-    def create_app_data_from_app(apps, schema_editor):
+    def create_app_data_from_app(self, schema_editor):
         """
         Iterate through all apps, create processors from run_graph, input_fields from input_schema, input_ui_schema and save as app_data
         """
-        App = apps.get_model('apps', 'App')
-        AppData = apps.get_model('apps', 'AppData')
+        App = self.get_model('apps', 'App')
+        AppData = self.get_model('apps', 'AppData')
 
-        apps = App.objects.all()
-        for app in apps:
+        self = App.objects.all()
+        for app in self:
             app_data_obj = AppData.objects.filter(app_uuid=app.uuid).first()
             if not app_data_obj:
                 try:

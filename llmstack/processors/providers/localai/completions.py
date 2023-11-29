@@ -113,5 +113,4 @@ class CompletionsProcessor(ApiProcessorInterface[CompletionsInput, CompletionsOu
             async_to_sync(self._output_stream.write)(
                 CompletionsOutput(choices=choices))
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

@@ -49,7 +49,7 @@ def prepare_env():
             config['llmstack']['default_openai_api_key'] = input(
                 'Enter default OpenAI API key: (Leave empty to configure in settings later) ') or ''
 
-            if not 'generatedfiles_root' in config:
+            if 'generatedfiles_root' not in config:
                 config['generatedfiles_root'] = './generatedfiles'
         with open(config_path, 'w') as f:
             toml.dump(config, f)
@@ -115,8 +115,7 @@ def main():
                 f'http://localhost:{os.environ["LLMSTACK_PORT"]}')
             break
         except Exception:
-            print(
-                f'Waiting for LLMStack server to be up...')
+            print('Waiting for LLMStack server to be up...')
             time.sleep(1)
 
     webbrowser.open(f'http://localhost:{os.environ["LLMSTACK_PORT"]}')

@@ -52,13 +52,12 @@ class Generic(ApiProcessorInterface[GenericInput, GenericOutput, GenericConfigur
 
         api_response = fetch_data_from_api(url, api_params, headers)
 
-        if api_response.ok:
-            json_api_response = api_response.json()
-            result = {
-                'async': json_api_response['urls'], '_response': {
-                    '_api_response': json_api_response,
-                },
-            }
-            return result
-        else:
+        if not api_response.ok:
             raise Exception(f'Error calling OpenAI API: {api_response.text}')
+        json_api_response = api_response.json()
+        return {
+            'async': json_api_response['urls'],
+            '_response': {
+                '_api_response': json_api_response,
+            },
+        }

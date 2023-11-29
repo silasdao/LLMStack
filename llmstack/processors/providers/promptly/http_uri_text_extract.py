@@ -82,9 +82,7 @@ class HttpUriTextExtract(ApiProcessorInterface[HttpUriTextExtractorInput, HttpUr
             async_to_sync(self._output_stream.write)(
                 HttpUriTextExtractorOutput(text=self.extracted_text),
             )
-            output = self._output_stream.finalize()
-            return output
-
+            return self._output_stream.finalize()
         if query and self.storage_index_name and url == self.url:
             documents: List[Document] = self.temp_store.hybrid_search(
                 self.storage_index_name, document_query=DocumentQuery(
@@ -98,9 +96,7 @@ class HttpUriTextExtract(ApiProcessorInterface[HttpUriTextExtractorInput, HttpUr
                     HttpUriTextExtractorOutput(text='\n'),
                 )
 
-            output = self._output_stream.finalize()
-            return output
-
+            return self._output_stream.finalize()
         text = extract_text_from_url(
             url, extra_params=ExtraParams(openai_key=openai_api_key),
         )
@@ -128,12 +124,8 @@ class HttpUriTextExtract(ApiProcessorInterface[HttpUriTextExtractorInput, HttpUr
                     HttpUriTextExtractorOutput(text='\n'),
                 )
 
-            output = self._output_stream.finalize()
-            return output
-
+            return self._output_stream.finalize()
         async_to_sync(self._output_stream.write)(
             HttpUriTextExtractorOutput(text=text),
         )
-        output = self._output_stream.finalize()
-
-        return output
+        return self._output_stream.finalize()

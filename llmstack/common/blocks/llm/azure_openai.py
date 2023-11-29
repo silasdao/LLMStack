@@ -32,15 +32,12 @@ def process_azure_openai_error_response(response: HttpAPIProcessorOutput) -> str
     """
         Processes the error response from OpenAI
     """
-    if response.content_json:
-        if 'error' in response.content_json:
-            if 'message' in response.content_json['error']:
-                return response.content_json['error']['message']
-            return response.content_json['error']
-        elif 'message' in response.content_json:
-            return response.content_json['message']
-        else:
-            return response.text
+    if response.content_json and 'error' in response.content_json:
+        if 'message' in response.content_json['error']:
+            return response.content_json['error']['message']
+        return response.content_json['error']
+    elif response.content_json and 'message' in response.content_json:
+        return response.content_json['message']
     else:
         return response.text
 
@@ -123,10 +120,11 @@ class AzureOpenAIAPIProcessor(LLMBaseProcessor[AzureOpenAIAPIProcessorInput, Azu
                 if http_response.text == 'data: [DONE]':
                     return
                 else:
-                    response = self._transform_streaming_api_response(
-                        input, configuration, http_response,
+                    yield self._transform_streaming_api_response(
+                        input,
+                        configuration,
+                        http_response,
                     )
-                    yield response
             else:
                 http_status_is_ok = False
                 error_message += http_response.text
@@ -162,10 +160,11 @@ class AzureOpenAIAPIProcessor(LLMBaseProcessor[AzureOpenAIAPIProcessorInput, Azu
 
         # If the response is ok, return the choices
         if isinstance(http_response, HttpAPIProcessorOutput) and http_response.is_ok:
-            response = self._transform_api_response(
-                input, configuration, http_response,
+            return self._transform_api_response(
+                input,
+                configuration,
+                http_response,
             )
-            return response
         else:
             raise Exception(process_azure_openai_error_response(http_response))
 

@@ -22,7 +22,7 @@ class AuthorizationMiddleware:
             path = request.META['PATH_INFO']
             raw_body = request.body
 
-            if ((discord_signature and discord_timestamp) or (slack_signature and slack_timestamp) or True) and re.match(r'^/api/apps/.*/run', path):
+            if True and re.match(r'^/api/apps/.*/run', path):
                 app_id = path.split('/')[3]
                 platform = path.split('/')[4]
                 app, signature_verifier = AppTypeFactory.get_app_type_signature_verifier(

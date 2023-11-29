@@ -108,9 +108,7 @@ class DataUriTextExtract(ApiProcessorInterface[DataUriTextExtractorInput, DataUr
             async_to_sync(self._output_stream.write)(
                 DataUriTextExtractorOutput(text=self.extracted_text),
             )
-            output = self._output_stream.finalize()
-            return output
-
+            return self._output_stream.finalize()
         if query and self.storage_index_name:
             documents: List[Document] = self.temp_store.hybrid_search(
                 self.storage_index_name, document_query=DocumentQuery(
@@ -121,9 +119,7 @@ class DataUriTextExtract(ApiProcessorInterface[DataUriTextExtractorInput, DataUr
                 DataUriTextExtractorOutput(text='\n'.join(
                     [document.page_content for document in documents])),
             )
-            output = self._output_stream.finalize()
-            return output
-
+            return self._output_stream.finalize()
         self.mime_type = mime_type
         self.file_name = file_name
         self.data = data
@@ -159,11 +155,8 @@ class DataUriTextExtract(ApiProcessorInterface[DataUriTextExtractorInput, DataUr
                 DataUriTextExtractorOutput(text='\n'.join(
                     [document.page_content for document in documents])),
             )
-            output = self._output_stream.finalize()
-            return output
-
+            return self._output_stream.finalize()
         async_to_sync(self._output_stream.write)(
             DataUriTextExtractorOutput(text=text),
         )
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

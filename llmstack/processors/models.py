@@ -121,7 +121,7 @@ class Endpoint(models.Model):
     )
 
     def __str__(self):
-        return self.name + ':' + str(self.version)
+        return f'{self.name}:{str(self.version)}'
 
 
 class VersionedEndpoint(models.Model):
@@ -191,7 +191,7 @@ class Request(models.Model):
     )
 
     def __str__(self):
-        return self.endpoint.name + ':' + str(self.endpoint.version)
+        return f'{self.endpoint.name}:{str(self.endpoint.version)}'
 
 
 class Response(models.Model):
@@ -321,7 +321,7 @@ class EndpointInvocationCount(models.Model):
     )
 
     def __str__(self):
-        return self.user.__str__() + ':' + self.month
+        return f'{self.user.__str__()}:{self.month}'
 
 
 class Feedback(models.Model):
@@ -492,7 +492,7 @@ class Share(models.Model):
     )
 
     def __str__(self):
-        return '{}_{}'.format(self.code, self.name)
+        return f'{self.code}_{self.name}'
 
 
 class PromptHub(models.Model):
@@ -502,7 +502,7 @@ class PromptHub(models.Model):
     rank = models.IntegerField(default=0, help_text='Rank of the instance')
 
     def __str__(self):
-        return '{}_{}'.format(self.share.code, self.share.name)
+        return f'{self.share.code}_{self.share.name}'
 
 
 @receiver(pre_save, sender=Endpoint)

@@ -157,8 +157,7 @@ class AppSerializer(DynamicFieldsModelSerializer):
         return obj.type.slug
 
     def get_processors(self, obj):
-        data = self.get_data(obj)
-        if data:
+        if data := self.get_data(obj):
             return None
 
         processors = []
@@ -190,18 +189,17 @@ class AppSerializer(DynamicFieldsModelSerializer):
         return processors
 
     def get_unique_processors(self, obj):
-        if obj.has_write_permission(self._request_user):
-            data = self.get_data(obj)
-            processors = data.get('processors', []) if data else []
-            unique_processors = []
-            for processor in processors:
-                if 'provider_slug' in processor and 'processor_slug' in processor:
-                    name = f"{processor['provider_slug']} / {processor['processor_slug']}"
-                    if name not in unique_processors:
-                        unique_processors.append(name)
-            return unique_processors
-
-        return []
+        if not obj.has_write_permission(self._request_user):
+            return []
+        data = self.get_data(obj)
+        processors = data.get('processors', []) if data else []
+        unique_processors = []
+        for processor in processors:
+            if 'provider_slug' in processor and 'processor_slug' in processor:
+                name = f"{processor['provider_slug']} / {processor['processor_slug']}"
+                if name not in unique_processors:
+                    unique_processors.append(name)
+        return unique_processors
 
     def get_discord_config(self, obj):
         return obj.discord_config if obj.has_write_permission(self._request_user) else None
@@ -231,8 +229,7 @@ class AppSerializer(DynamicFieldsModelSerializer):
         if obj.template:
             return AppTemplateSerializer(instance=obj.template).data
         elif obj.template_slug is not None:
-            app_template = get_app_template_by_slug(obj.template_slug)
-            if app_template:
+            if app_template := get_app_template_by_slug(obj.template_slug):
                 return app_template.dict(exclude_none=True)
         return None
 
@@ -298,9 +295,11 @@ class AppTemplateSerializer(serializers.ModelSerializer):
             return processors
 
         def get_input_fields(self, obj):
-            app_data = AppData.objects.filter(
-                app_uuid=obj.uuid).order_by('-created_at').first()
-            if app_data:
+            if (
+                app_data := AppData.objects.filter(app_uuid=obj.uuid)
+                .order_by('-created_at')
+                .first()
+            ):
                 return app_data.data.get('input_fields', [])
             return []
 
@@ -317,8 +316,7 @@ class AppTemplateSerializer(serializers.ModelSerializer):
     categories = AppTemplateCategorySerializer(many=True)
 
     def get_app(self, obj):
-        hide_details = self.context.get('hide_details', True)
-        if hide_details:
+        if hide_details := self.context.get('hide_details', True):
             return None
 
         app_obj = App.objects.get(uuid=obj.app_uuid, is_cloneable=True)
@@ -328,8 +326,7 @@ class AppTemplateSerializer(serializers.ModelSerializer):
         return AppTemplateSerializer.AppTemplateAppSerializer(instance=app_obj).data
 
     def get_pages(self, obj):
-        hide_details = self.context.get('hide_details', True)
-        if hide_details:
+        if hide_details := self.context.get('hide_details', True):
             return None
 
         app_template_handler_cls = AppTemplateFactory.get_app_template_handler(
@@ -352,8 +349,7 @@ class AppDataSerializer(serializers.ModelSerializer):
     data = serializers.SerializerMethodField()
 
     def get_data(self, obj):
-        hide_details = self.context.get('hide_details', True)
-        if hide_details:
+        if hide_details := self.context.get('hide_details', True):
             return None
 
         return obj.data

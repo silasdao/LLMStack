@@ -38,7 +38,7 @@ class UJSONParser(BaseParser):
             data = stream.read().decode(encoding)
             return ujson.loads(data)
         except ValueError as exc:
-            raise ParseError('JSON parse error - %s' % str(exc))
+            raise ParseError(f'JSON parse error - {str(exc)}')
 
 
 class ORJSONParser(BaseParser):
@@ -65,4 +65,4 @@ class ORJSONParser(BaseParser):
             data = stream.read().decode(encoding)
             return orjson.loads(data)
         except ValueError as exc:
-            raise ParseError('JSON parse error - %s' % str(exc))
+            raise ParseError(f'JSON parse error - {str(exc)}')

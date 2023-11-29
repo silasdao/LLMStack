@@ -131,5 +131,4 @@ class TextToSpeechProcessor(ApiProcessorInterface[TextToSpeechInput, TextToSpeec
             TextToSpeechOutput(audio_content=audio_content),
         )
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

@@ -98,11 +98,9 @@ class AppRunner:
         if not self.session_id:
             self.session_id = str(uuid.uuid4())
 
-        app_session = get_app_session(
+        return get_app_session(
             self.session_id,
         ) or create_app_session(self.app, self.session_id)
-
-        return app_session
 
     def _is_app_accessible(self):
         # Return 404 if the app is not published. If the app is published but not public, return 404 for non owner

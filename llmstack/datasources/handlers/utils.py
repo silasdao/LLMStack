@@ -11,25 +11,27 @@ def extract_documents(file_data, content_key, mime_type, file_name, metadata, ch
     )
     file_content = '\n\n'.join([str(el) for el in elements])
 
-    if mime_type == 'text/csv':
-        docs = [
+    return (
+        [
             Document(
                 page_content_key=content_key,
                 page_content=t,
                 metadata=metadata,
-            ) for t in CSVTextSplitter(
+            )
+            for t in CSVTextSplitter(
                 chunk_size=chunk_size,
                 length_function=CSVTextSplitter.num_tokens_from_string_using_tiktoken,
             ).split_text(file_content)
         ]
-    else:
-        docs = [
+        if mime_type == 'text/csv'
+        else [
             Document(
                 page_content_key=content_key,
                 page_content=t,
                 metadata=metadata,
-            ) for t in SpacyTextSplitter(
+            )
+            for t in SpacyTextSplitter(
                 chunk_size=chunk_size,
             ).split_text(file_content)
         ]
-    return docs
+    )

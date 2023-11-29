@@ -143,5 +143,4 @@ class TextProcessor(ApiProcessorInterface[TextInput, TextOutput, TextConfigurati
                 ),
             )
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

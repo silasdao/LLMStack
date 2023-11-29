@@ -93,11 +93,10 @@ class PostgresDataSource(DataSourceProcessor[PostgresDatabaseSchema]):
         result = pg_client.process(PostgresReaderInput(
             sql=query), configuration=self._reader_configuration).documents[0].content_text
         json_result = json.loads(result)
-        # JSON to csv
-        csv_result = ''
-        for row in json_result['rows']:
-            csv_result += ','.join(list(map(lambda entry: str(entry),
-                                   row.values()))) + '\n'
+        csv_result = ''.join(
+            ','.join(list(map(lambda entry: str(entry), row.values()))) + '\n'
+            for row in json_result['rows']
+        )
         return [Document(page_content_key='content', page_content=csv_result, metadata={'score': 0, 'source': self._source_name})]
 
     def hybrid_search(self, query: str, **kwargs) -> List[dict]:
@@ -105,12 +104,10 @@ class PostgresDataSource(DataSourceProcessor[PostgresDatabaseSchema]):
         result = pg_client.process(PostgresReaderInput(
             sql=query), configuration=self._reader_configuration).documents[0].content_text
         json_result = json.loads(result)
-        # JSON to csv
-        csv_result = ''
-        for row in json_result['rows']:
-            csv_result += ','.join(list(map(lambda entry: str(entry),
-                                   row.values()))) + '\n'
-
+        csv_result = ''.join(
+            ','.join(list(map(lambda entry: str(entry), row.values()))) + '\n'
+            for row in json_result['rows']
+        )
         return [Document(page_content_key='content', page_content=csv_result, metadata={'score': 0, 'source': self._source_name})]
 
     def delete_entry(self, data: dict) -> None:

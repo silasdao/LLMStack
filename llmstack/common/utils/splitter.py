@@ -38,12 +38,11 @@ class TextSplitter(ABC):
         for chunk in strs:
             chunk_length =  self._length_function(chunk)
             max_length = total_length + chunk_length + separate_length
-            
+
             # Check if the length exceed the maximum chunk size
             if max_length > self._chunk_size:
                 if cur_chunk:
-                    combined_chunk = separator.join(cur_chunk)
-                    if combined_chunk:
+                    if combined_chunk := separator.join(cur_chunk):
                         chunksList.append(combined_chunk)
 
                     # Adjust total length and current chunk
@@ -56,8 +55,7 @@ class TextSplitter(ABC):
 
         # Handle the last piece if there's any
         if cur_chunk:
-            combined_chunk = separator.join(cur_chunk)
-            if combined_chunk:
+            if combined_chunk := separator.join(cur_chunk):
                 chunksList.append(combined_chunk)
 
         return chunksList
@@ -70,8 +68,7 @@ class TextSplitter(ABC):
     def num_tokens_from_string_using_tiktoken(cls, string: str, encoding_name: str = 'cl100k_base') -> int:
         """Returns the number of tokens in a text string."""
         encoding = tiktoken.get_encoding(encoding_name)
-        num_tokens = len(encoding.encode(string))
-        return num_tokens
+        return len(encoding.encode(string))
 
     @classmethod
     def num_tokens_for_string_using_gpt3_approximation(cls, string: str) -> int:
@@ -92,11 +89,11 @@ class CharacterTextSplitter(TextSplitter):
 
     # Split a given text with a given separator using regex, and return a list of chunks
     def _split_text_with_regex(self, text: str, separator: str, keep_separator: bool) -> List[str]:
-        if keep_separator:
-            chunks = re.split(f'({separator})', text)
-        else:
-            chunks = re.split(separator, text)
-        return chunks 
+        return (
+            re.split(f'({separator})', text)
+            if keep_separator
+            else re.split(separator, text)
+        ) 
     
     def split_text(self, text: str) -> List[str]:
         separator = (
@@ -112,7 +109,7 @@ class CSVTextSplitter(TextSplitter):
         chunks = []
         file_handle = StringIO(text)
         csv_reader = csv.DictReader(file_handle)
-        for i, row in enumerate(csv_reader):
+        for row in csv_reader:
             content = '\n\n'.join(f'{k}: {v}' for k, v in row.items())
             chunks.append(content)
         return chunks
@@ -169,7 +166,7 @@ class HtmlSplitter(TextSplitter):
         import lxml
         if element.tag == lxml.etree.Comment:
             return [lxml.html.tostring(element).decode('utf-8')]
-        
+
         # If string representation of element is less than max_length, return it        
         attribute_list = []
         for k,v in element.items():
@@ -177,12 +174,16 @@ class HtmlSplitter(TextSplitter):
                 attribute_list.append(f"{k}={v}")
             else:
                 attribute_list.append(f"{k}=\"{v}\"")
-            
+
         # Append opening tag with attributes
         attributes = " ".join(attribute_list)
-        
-        html_elements = [f"<{element.tag} {attributes}>"] if len(attributes) > 0 else [f"<{element.tag}>"]
-        
+
+        html_elements = (
+            [f"<{element.tag} {attributes}>"]
+            if attributes != ""
+            else [f"<{element.tag}>"]
+        )
+
         html_elements.append(element.text or '')
         # Recursively iterate through children
         child_html_elements = []
@@ -191,25 +192,22 @@ class HtmlSplitter(TextSplitter):
             if len(''.join(child_elements)) <= max_length:
                 child_elements = [''.join(child_elements)]
             child_html_elements += child_elements
-        
+
         if len(''.join(child_html_elements)) <= max_length:
             html_elements = [html_elements[0], html_elements[1], ''.join(child_html_elements)]
         else:
-            for e in child_html_elements:
-                html_elements.append(e)
-        html_elements.append(f"</{element.tag}>")
-        html_elements.append(element.tail or '')
+            html_elements.extend(iter(child_html_elements))
+        html_elements.extend((f"</{element.tag}>", (element.tail or '')))
         return html_elements
     
     
     def split_text(self, text: str) -> List[str]:
         import lxml.html
         import lxml.etree
-        if self._is_html_fragment:
-            result = []
-            for fragment in lxml.html.fragments_fromstring(text):
-                result.extend(self._get_html_elements_recursive(fragment, self._chunk_size))
-            
-            return self._merge_list_elements(result, self._chunk_size)
-        else:
+        if not self._is_html_fragment:
             return self._get_html_elements_recursive(lxml.html.fromstring(text), self._chunk_size)
+        result = []
+        for fragment in lxml.html.fragments_fromstring(text):
+            result.extend(self._get_html_elements_recursive(fragment, self._chunk_size))
+
+        return self._merge_list_elements(result, self._chunk_size)

@@ -54,7 +54,7 @@ def add_port(uri):
         return uri.geturl()
 
     port = 443 if uri.scheme == "https" else 80
-    new_netloc = uri.netloc + ":" + str(port)
+    new_netloc = f"{uri.netloc}:{port}"
     new_uri = uri._replace(netloc=new_netloc)
 
     return new_uri.geturl()

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_data_entry_task(datasource: DataSource, datasource_entry_items: List[DataSourceEntryItem]):
-    logger.info(f'Adding data_source_entries')
+    logger.info('Adding data_source_entries')
 
     datasource_entry_handler_cls = DataSourceTypeFactory.get_datasource_type_handler(
         datasource.type,
@@ -38,17 +38,13 @@ def add_data_entry_task(datasource: DataSource, datasource_entry_items: List[Dat
             datasource_entries_size += result.size
         except Exception as e:
             logger.exception(
-                f'Error adding data_source_entry: %s' %
-                str(datasource_entry_item.name),
+                f'Error adding data_source_entry: {str(datasource_entry_item.name)}'
             )
             datasource_entry_object.status = DataSourceEntryStatus.FAILED
             datasource_entry_object.config = {'errors': {'message': str(e)}}
 
-        logger.debug(
-            f'Updating data_source_entry: %s' %
-            str(datasource_entry_item.uuid),
-        )
-        logger.debug(f'Status: %s' % str(datasource_entry_object.status))
+        logger.debug(f'Updating data_source_entry: {str(datasource_entry_item.uuid)}')
+        logger.debug(f'Status: {str(datasource_entry_object.status)}')
 
         datasource_entry_object.save()
 
@@ -58,7 +54,7 @@ def add_data_entry_task(datasource: DataSource, datasource_entry_items: List[Dat
 
 
 def delete_data_entry_task(datasource: DataSource, entry_data: DataSourceEntry):
-    logger.error(f'Deleting data_source_entry: %s' % str(entry_data.uuid))
+    logger.error(f'Deleting data_source_entry: {str(entry_data.uuid)}')
     entry_data.status = DataSourceEntryStatus.MARKED_FOR_DELETION
     entry_data.save()
 
@@ -76,10 +72,7 @@ def delete_data_entry_task(datasource: DataSource, entry_data: DataSourceEntry):
         logger.exception("Error deleting data source entry from weaviate")
         entry_data.delete()
     except Exception as e:
-        logger.exception(
-            f'Error deleting data_source_entry: %s' %
-            str(entry_data.name),
-        )
+        logger.exception(f'Error deleting data_source_entry: {str(entry_data.name)}')
         entry_data.status = DataSourceEntryStatus.FAILED
         entry_data.config = {'errors': {
             'message': "Error in deleting data source entry"}}
@@ -90,7 +83,7 @@ def delete_data_entry_task(datasource: DataSource, entry_data: DataSourceEntry):
 
 
 def resync_data_entry_task(datasource: DataSource, entry_data: DataSourceEntry):
-    logger.info(f'Resyncing task for data_source_entry: %s' % str(entry_data))
+    logger.info(f'Resyncing task for data_source_entry: {str(entry_data)}')
 
     datasource_entry_handler_cls = DataSourceTypeFactory.get_datasource_type_handler(
         datasource.type,
@@ -149,7 +142,6 @@ def extract_urls_task(url):
 
     if is_sitemap_url(url):
         urls = extract_urls_from_sitemap(url)
-        return urls
     else:
         urls = [url]
         try:
@@ -185,4 +177,5 @@ def extract_urls_task(url):
         except Exception as e:
             logger.exception(f'Error while extracting urls: {e}')
 
-        return urls
+
+    return urls

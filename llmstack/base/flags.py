@@ -9,7 +9,7 @@ from .models import Profile
 
 class FlagSource(object):
     def get_flags(self):
-        flags = {
+        return {
             'IS_PRO_SUBSCRIBER': [
                 Condition('pro_subscriber', False),
             ],
@@ -57,37 +57,26 @@ class FlagSource(object):
             ],
             'CAN_EXPORT_HISTORY': [
                 Condition('can_export_history', False),
-            ]
+            ],
         }
-
-        return flags
 
 
 @conditions.register('pro_subscriber')
 def is_pro_subscriber(value, request=None, **kwargs):
     profile = Profile.objects.get(user=request.user)
-    if not profile:
-        return False
-
-    return True
+    return bool(profile)
 
 
 @conditions.register('basic_subscriber')
 def is_basic_subscriber(value, request=None, **kwargs):
     profile = Profile.objects.get(user=request.user)
-    if not profile:
-        return False
-
     return False
 
 
 @conditions.register('organization_member')
 def is_organization_member(value, request=None, **kwargs):
     profile = Profile.objects.get(user=request.user)
-    if not profile:
-        return False
-
-    return profile.organization is not None
+    return False if not profile else profile.organization is not None
 
 
 @conditions.register('organization_owner')
@@ -101,10 +90,10 @@ def is_organization_owner(value, request=None, **kwargs):
 
 @conditions.register('can_upload_app_logo')
 def can_upload_app_logo(value, request=None, **kwargs):
-    if flag_enabled('IS_PRO_SUBSCRIBER', request=request) or flag_enabled('IS_ORGANIZATION_MEMBER', request=request):
-        return True
-
-    return False
+    return bool(
+        flag_enabled('IS_PRO_SUBSCRIBER', request=request)
+        or flag_enabled('IS_ORGANIZATION_MEMBER', request=request)
+    )
 
 
 @conditions.register('can_make_app_public_visible')
@@ -119,10 +108,10 @@ def can_make_app_public_visible(value, request=None, **kwargs):
     organization_settings = OrganizationSettings.objects.filter(
         organization=organization,
     ).first()
-    if organization_settings and organization_settings.max_app_visibility != AppVisibility.PUBLIC:
-        return False
-
-    return True
+    return (
+        not organization_settings
+        or organization_settings.max_app_visibility == AppVisibility.PUBLIC
+    )
 
 
 @conditions.register('can_make_app_unlisted_visible')
@@ -155,10 +144,11 @@ def can_make_app_organization_visible(value, request=None, **kwargs):
     organization_settings = OrganizationSettings.objects.filter(
         organization=organization,
     ).first()
-    if organization_settings and organization_settings.max_app_visibility >= AppVisibility.ORGANIZATION:
-        return True
-
-    return False
+    return bool(
+        organization_settings
+        and organization_settings.max_app_visibility
+        >= AppVisibility.ORGANIZATION
+    )
 
 
 @conditions.register('can_make_app_private_visible')
@@ -173,10 +163,13 @@ def can_make_app_private_visible(value, request=None, **kwargs):
         owner=request.user, is_published=True, visibility=AppVisibility.PRIVATE,
     )
 
-    if len(published_private_apps) < 1 or (flag_enabled('IS_BASIC_SUBSCRIBER', request=request) and len(published_private_apps) < 10):
-        return True
-
-    return False
+    return bool(
+        len(published_private_apps) < 1
+        or (
+            flag_enabled('IS_BASIC_SUBSCRIBER', request=request)
+            and len(published_private_apps) < 10
+        )
+    )
 
 
 @conditions.register('can_add_keys')
@@ -186,11 +179,11 @@ def can_add_keys(value, request=None, **kwargs):
         organization_settings = OrganizationSettings.objects.filter(
             organization=profile.organization,
         ).first()
-        if profile and organization_settings and organization_settings.allow_user_keys:
-            return True
-        else:
-            return False
-
+        return bool(
+            profile
+            and organization_settings
+            and organization_settings.allow_user_keys
+        )
     return True
 
 

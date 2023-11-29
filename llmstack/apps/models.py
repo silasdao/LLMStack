@@ -257,7 +257,7 @@ class App(models.Model):
         return self.owner == user or (self.is_published == True and user.email in self.write_accessible_by)
 
     def __str__(self) -> str:
-        return self.name + ' - ' + self.owner.username
+        return f'{self.name} - {self.owner.username}'
 
 
 class AppData(models.Model):
@@ -304,7 +304,7 @@ class AppHub(models.Model):
     )
 
     def __str__(self):
-        return '{}_{}'.format(self.app.name, self.app.published_uuid)
+        return f'{self.app.name}_{self.app.published_uuid}'
 
     def save(self, *args, **kwargs) -> None:
         # Make sure app is published and public before saving to app hub

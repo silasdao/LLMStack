@@ -51,9 +51,7 @@ class SlackApp(AppTypeInterface[SlackAppConfigSchema]):
         signature = headers.get('X-Slack-Signature')
         timestamp = headers.get('X-Slack-Request-Timestamp')
         if signature and timestamp and raw_body:
-            signing_secret = app.slack_config.get('signing_secret', '')
-
-            if signing_secret:
+            if signing_secret := app.slack_config.get('signing_secret', ''):
                 if abs(time() - int(timestamp)) > 60 * 5:
                     raise PermissionDenied()
 

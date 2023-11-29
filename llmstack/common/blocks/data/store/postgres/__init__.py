@@ -39,7 +39,7 @@ class PostgresOutput(BaseSchema):
     documents: List[DataDocument]
 
 def _create_cert_file(configuration, key, ssl_config):
-    file_key = key + "File"
+    file_key = f"{key}File"
     if file_key in configuration:
         with NamedTemporaryFile(mode="w", delete=False) as cert_file:
             cert_bytes = b64decode(configuration[file_key])
@@ -58,7 +58,7 @@ def _get_ssl_config(configuration: dict):
 
 def get_pg_connection(configuration: dict):
     ssl_config =  _get_ssl_config(configuration) if configuration.get("use_ssl") else {}
-    connection = psycopg2.connect(
+    return psycopg2.connect(
         user=configuration.get("user"),
         password=configuration.get("password"),
         host=configuration.get("host"),
@@ -67,5 +67,3 @@ def get_pg_connection(configuration: dict):
         async_=False,
         **ssl_config,
     )
-
-    return connection

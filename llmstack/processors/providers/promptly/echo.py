@@ -53,5 +53,4 @@ class EchoProcessor(ApiProcessorInterface[EchoProcessorInput, EchoProcessorOutpu
                 EchoProcessorOutput(output_str=self._input.input_str),
             )
 
-        output = output_stream.finalize()
-        return output
+        return output_stream.finalize()

@@ -85,13 +85,12 @@ class ImagesGenerations(ApiProcessorInterface[ImagesGenerationsInput, ImagesGene
             generations = list(
                 map(lambda entry: entry['b64_json'], http_response.content_json['data']))
         else:
-            raise Exception("Error in processing request, details: {}".format(
-                http_response.content))
+            raise Exception(
+                f"Error in processing request, details: {http_response.content}"
+            )
 
         async_to_sync(self._output_stream.write)(
             ImagesGenerationsOutput(data=generations)
         )
 
-        output = self._output_stream.finalize()
-
-        return output
+        return self._output_stream.finalize()

@@ -134,9 +134,7 @@ class S3BucketDataSource(DataSourceProcessor[S3BucketSchema]):
             base64_encoded_file_content = base64.b64encode(
                 document.content,
             ).decode()
-            data_url = 'data:{};name={};base64,{}'.format(
-                mime_type, file_name, base64_encoded_file_content,
-            )
+            data_url = f'data:{mime_type};name={file_name};base64,{base64_encoded_file_content}'
             mime_type, file_name, file_data = validate_parse_data_uri(data_url)
             data_source_entry = DataSourceEntryItem(
                 name=file_name, data={
@@ -163,15 +161,16 @@ class S3BucketDataSource(DataSourceProcessor[S3BucketSchema]):
                     chunk_size=2, length_function=CSVTextSplitter.num_tokens_from_string_using_tiktoken,
             ).split_text(file_text):
                 if self.split_csv:
-                    for entry_chunk in SpacyTextSplitter(
-                            chunk_size=1500,
-                    ).split_text(file_text):
-                        docs.append(
-                            Document(
-                                page_content_key=self.get_content_key(
-                                ), page_content=entry_chunk, metadata={'source': data.data['file_name']},
-                            ),
+                    docs.extend(
+                        Document(
+                            page_content_key=self.get_content_key(),
+                            page_content=entry_chunk,
+                            metadata={'source': data.data['file_name']},
                         )
+                        for entry_chunk in SpacyTextSplitter(
+                            chunk_size=1500,
+                        ).split_text(file_text)
+                    )
                 else:
                     docs.append(
                         Document(

@@ -40,12 +40,10 @@ class SitemapXMLSpider(SitemapSpider):
         super(SitemapXMLSpider, self).__init__(*args, **kwargs)
 
     def parse(self, response):
-        data = {}
         if len(self.output) > self.max_urls:
             raise CloseSpider('Reached maximum number of crawled URLs')
 
-        # Extract data from the page using CSS or XPath selectors
-        data['title'] = response.css('title::text').get()
+        data = {'title': response.css('title::text').get()}
         data['url'] = response.url
         self.output.append(data)
 
@@ -118,8 +116,7 @@ class URLSpider(CrawlSpider):
     def get_html_content(self, response):
         if self.use_renderer:
             try:
-                html_content = async_to_sync(run_playwright)(response.url)
-                return html_content
+                return async_to_sync(run_playwright)(response.url)
             except Exception as e:
                 logging.exception('Error in fetching file with Playwright')
         return response.body.decode('utf-8')
@@ -134,12 +131,10 @@ class URLSpider(CrawlSpider):
         return '\n'.join(text_data).strip()
 
     def parse_start_url(self, response):
-        data = {}
-        data['title'] = response.css('title::text').get()
+        data = {'title': response.css('title::text').get()}
         data['url'] = response.url
 
-        html_content = self.get_html_content(response)
-        if html_content:
+        if html_content := self.get_html_content(response):
             data['raw_text'] = self.get_text_from_html(
                 Selector(text=html_content, type='html'),
             )
@@ -148,11 +143,13 @@ class URLSpider(CrawlSpider):
             )
             data['html_page'] = html_content
 
-            data['hrefs'] = [
-                link for link in Selector(text=html_content, type='html').css(
+            data['hrefs'] = list(
+                Selector(text=html_content, type='html')
+                .css(
                     'a::attr(href)',
-                ).getall()
-            ]
+                )
+                .getall()
+            )
 
         # Add more data extraction here as needed
         self.output.append(data)
@@ -163,12 +160,10 @@ class URLSpider(CrawlSpider):
                 yield response.follow(link, callback=self.parse_document)
 
     def parse_document(self, response):
-        data = {}
-        data['title'] = response.css('title::text').get()
+        data = {'title': response.css('title::text').get()}
         data['url'] = response.url
 
-        html_content = self.get_html_content(response)
-        if html_content:
+        if html_content := self.get_html_content(response):
             data['raw_text'] = self.get_text_from_html(
                 Selector(text=html_content, type='html'),
             )
@@ -177,11 +172,13 @@ class URLSpider(CrawlSpider):
             )
             data['html_page'] = html_content
 
-            data['hrefs'] = [
-                link for link in Selector(text=html_content, type='html').css(
+            data['hrefs'] = list(
+                Selector(text=html_content, type='html')
+                .css(
                     'a::attr(href)',
-                ).getall()
-            ]
+                )
+                .getall()
+            )
 
         # Add more data extraction here as needed
         if response.url not in self.start_urls:

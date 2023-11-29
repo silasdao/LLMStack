@@ -85,6 +85,4 @@ class WebBrowser(ApiProcessorInterface[WebBrowserInput, WebBrowserOutput, WebBro
             text=output_text
         ))
 
-        output = output_stream.finalize()
-
-        return output
+        return output_stream.finalize()

@@ -20,9 +20,7 @@ class LLMBaseProcessor(ProcessorInterface[BaseInputType, BaseOutputType, BaseCon
         input_cls = self.__class__.__orig_bases__[0].__args__[0]
         if self._input_tx_cb:
             input = self._input_tx_cb(input)
-        if type(input_cls) == type:
-            return input
-        return input_cls(**input)
+        return input if type(input_cls) == type else input_cls(**input)
 
     def parse_validate_configuration(self, configuration) -> BaseConfigurationType:
         configuration_cls = self.__class__.__orig_bases__[0].__args__[2]

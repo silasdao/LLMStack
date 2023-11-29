@@ -20,7 +20,7 @@ class SQLiteReader(ProcessorInterface[SQLiteReaderInput, SQLiteOutput, SQLiteCon
             column_name = col[0]
             while column_name in column_names:
                 duplicates_counters[col[0]] += 1
-                column_name = "{}{}".format(col[0], duplicates_counters[col[0]])
+                column_name = f"{col[0]}{duplicates_counters[col[0]]}"
 
             column_names.add(column_name)
             new_columns.append({"name": column_name, "friendly_name": column_name, "type": col[1]})
@@ -34,14 +34,13 @@ class SQLiteReader(ProcessorInterface[SQLiteReaderInput, SQLiteOutput, SQLiteCon
             cursor = connection.cursor()
             cursor.execute(input.sql)
 
-            if cursor.description is not None:
-                columns = self.fetch_columns([(i[0], None) for i in cursor.description])
-                rows = [dict(zip((column["name"] for column in columns), row)) for row in cursor]
-
-                data = {"columns": columns, "rows": rows}
-                json_data = json.dumps(data)
-            else:
+            if cursor.description is None:
                 raise Exception("Query completed but it returned no data.")
+            columns = self.fetch_columns([(i[0], None) for i in cursor.description])
+            rows = [dict(zip((column["name"] for column in columns), row)) for row in cursor]
+
+            data = {"columns": columns, "rows": rows}
+            json_data = json.dumps(data)
         except Exception as e:
             if connection:
                 connection.cancel()

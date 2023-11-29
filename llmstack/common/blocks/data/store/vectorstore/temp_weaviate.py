@@ -51,7 +51,7 @@ class TempWeaviate(Weaviate):
         return self.add_text(index_name, document, **kwargs)
 
     def create_temp_index(self):
-        index_name = 'Temp_{}'.format(str(uuid.uuid4())).replace('-', '_')
+        index_name = f'Temp_{str(uuid.uuid4())}'.replace('-', '_')
         if self.weaviate_text2vec_config is None:
             raise Exception('Vector store embedding config is not set')
         schmea = {

@@ -123,20 +123,14 @@ class Uri(ProcessorInterface[UriInput, DataSourceOutputSchema, UriConfiguration]
                 key.strip().rstrip()
             ] = value.strip().rstrip().lower()
 
-        if mime_type == 'text/html':
-            # If this is an html page and we are configured to use scrapy
-            if configuration.use_scrapy:
-                result = run_url_spider_in_process(
-                    url=input.uri, use_renderer=True)
-                data = result[0]['html_page'].encode('utf-8')
-            else:
-                data = requests.get(url=input.uri, headers=configuration.headers,
-                                    timeout=configuration.default_timeout,
-                                    ).content
+        if mime_type == 'text/html' and configuration.use_scrapy:
+            result = run_url_spider_in_process(
+                url=input.uri, use_renderer=True)
+            data = result[0]['html_page'].encode('utf-8')
         else:
             data = requests.get(url=input.uri, headers=configuration.headers,
-                                timeout=configuration.default_timeout).content
-
+                                timeout=configuration.default_timeout,
+                                ).content
         return self._extract_text(data, mime_type, input.uri, configuration)
 
     def process(self, input: UriInput, configuration: UriConfiguration) -> DataSourceOutputSchema:

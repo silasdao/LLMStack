@@ -63,23 +63,24 @@ class DiscordApp(AppTypeInterface[DiscordAppConfigSchema]):
         return 'Provides a Discord app that takes in a user input returns rendered output in the provided template'
 
     @classmethod
-    def pre_save(self, app: App):
+    def pre_save(cls, app: App):
         if app.is_published and app.discord_config:
             config = app.discord_config
 
             slash_command_name = config['slash_command_name']
-            slash_command_options = []
             app_data = AppData.objects.filter(app_uuid=app.uuid, is_draft=False).order_by(
                 '-created_at').first() or AppData.objects.filter(app_uuid=app.uuid, is_draft=True).order_by('-created_at').first()
             input_fields = app_data.data['input_fields']
 
-            for input_field in input_fields:
-                slash_command_options.append({
+            slash_command_options = [
+                {
                     'name': input_field['name'],
                     'description': input_field['description'],
                     'type': get_discord_field_type(input_field['type']),
                     'required': input_field['required'],
-                })
+                }
+                for input_field in input_fields
+            ]
             body = {
                 'name': slash_command_name,
                 'type': 1,

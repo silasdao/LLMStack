@@ -171,5 +171,4 @@ class TextChatProcessor(ApiProcessorInterface[TextChatInput, TextChatOutput, Tex
                 ),
             )
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

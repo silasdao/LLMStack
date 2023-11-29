@@ -8,8 +8,8 @@ class Migration(migrations.Migration):
     Rename existing processor slugs to match the new naming convention
     """
 
-    def rename_slugs(apps, schema_editor):
-        ApiBackend = apps.get_model('apiabstractor', 'ApiBackend')
+    def rename_slugs(self, schema_editor):
+        ApiBackend = self.get_model('apiabstractor', 'ApiBackend')
         slug_map = {
             'openai_completions': 'completions',
             'openai_image_generations': 'image_generations',

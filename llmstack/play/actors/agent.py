@@ -253,4 +253,4 @@ class AgentActor(Actor):
         super().on_stop()
 
     def get_dependencies(self):
-        return list(set([x['template_key'] for x in self._processor_configs.values()]))
+        return list({x['template_key'] for x in self._processor_configs.values()})

@@ -7,8 +7,8 @@ from llmstack.apps.models import AppAccessPermission
 
 class Migration(migrations.Migration):
 
-    def create_permissions_from_accessible_by(apps, schema_editor):
-        App = apps.get_model('apps', 'App')
+    def create_permissions_from_accessible_by(self, schema_editor):
+        App = self.get_model('apps', 'App')
         for app in App.objects.all():
             if app.accessible_by and len(app.accessible_by) > 0:
                 if app.access_permission == AppAccessPermission.READ and not app.read_accessible_by:

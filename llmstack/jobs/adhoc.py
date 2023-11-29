@@ -23,15 +23,12 @@ class ProcessingJob(Job):
             return Queue()
 
     @classmethod
-    def generate_job_id(self):
+    def generate_job_id(cls):
         raise NotImplementedError()
 
     @classmethod
-    def get_connection(self):
-        if self._use_redis:
-            return django_rq.get_connection('default')
-        else:
-            return 'local'  # Return a dummy connection
+    def get_connection(cls):
+        return django_rq.get_connection('default') if cls._use_redis else 'local'
 
     @classmethod
     def create(cls, **kwargs):
@@ -49,16 +46,16 @@ class ProcessingJob(Job):
 class DataSourceEntryProcessingJob(ProcessingJob):
     @classmethod
     def generate_job_id(cls):
-        return '{}'.format(str(uuid.uuid4()))
+        return f'{str(uuid.uuid4())}'
 
 
 class HistoryPersistenceJob(ProcessingJob):
     @classmethod
     def generate_job_id(cls):
-        return '{}'.format(str(uuid.uuid4()))
+        return f'{str(uuid.uuid4())}'
 
 
 class ExtractURLJob(ProcessingJob):
     @classmethod
     def generate_job_id(cls):
-        return '{}'.format(str(uuid.uuid4()))
+        return f'{str(uuid.uuid4())}'

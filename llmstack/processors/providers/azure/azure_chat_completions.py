@@ -69,7 +69,7 @@ def num_tokens_from_messages(messages, model='gpt-35-turbo'):
         encoding = tiktoken.get_encoding('cl100k_base')
     if model == 'gpt-35-turbo':
         return num_tokens_from_messages(messages, model='gpt-3.5-turbo-0301')
-    elif model == 'gpt-4' or model == 'gpt-4-32k':
+    elif model in ['gpt-4', 'gpt-4-32k']:
         return num_tokens_from_messages(messages, model='gpt-4-0314')
     elif model == 'gpt-35-turbo-0301':
         # every message follows <|start|>{role/name}\n{content}<|end|>\n
@@ -191,7 +191,10 @@ class AzureChatCompletions(ApiProcessorInterface[AzureChatCompletionsInput, Azur
         )
 
         for result in result_iter:
-            if result.choices[0].role == None and result.choices[0].content == None:
+            if (
+                result.choices[0].role is None
+                and result.choices[0].content is None
+            ):
                 continue
             async_to_sync(self._output_stream.write)(
                 AzureChatCompletionsOutput(

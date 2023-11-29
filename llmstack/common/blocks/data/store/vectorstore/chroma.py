@@ -60,10 +60,10 @@ class Chroma(VectorStoreInterface):
         return id
 
     def add_texts(self, index_name: str, documents: List[Document], **kwargs: Any):
-        ids = []
-        for document in documents:
-            ids.append(self.add_text(index_name, document, kwargs=kwargs))
-        return ids
+        return [
+            self.add_text(index_name, document, kwargs=kwargs)
+            for document in documents
+        ]
 
     def get_or_create_index(self, index_name: str, schema: str, **kwargs: Any):
         return self._client.get_or_create_collection(index_name)
@@ -109,7 +109,7 @@ class Chroma(VectorStoreInterface):
         return result
 
     def create_temp_index(self):
-        index_name = 'Temp_{}'.format(str(uuid.uuid4())).replace('-', '_')
+        index_name = f'Temp_{str(uuid.uuid4())}'.replace('-', '_')
         self.create_index(schema='', index_name=index_name)
 
         return index_name

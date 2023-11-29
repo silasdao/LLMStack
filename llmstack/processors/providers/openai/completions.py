@@ -103,5 +103,4 @@ class Completions(ApiProcessorInterface[CompletionsInput, CompletionsOutput, Com
                                   api_response=result.metadata.raw_response),
             )
 
-        output = self._output_stream.finalize()
-        return output
+        return self._output_stream.finalize()

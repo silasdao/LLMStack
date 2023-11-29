@@ -99,15 +99,20 @@ class PDFDataSource(DataSourceProcessor[PdfSchema]):
         for element in partition_pdf(file=data_fp, include_page_breaks=True):
             if isinstance(element, PageBreak):
                 page_content += '\n\n'
-                for text_chunk in SpacyTextSplitter(chunk_size=1500).split_text(page_content):
-                    docs.append(
-                        Document(
-                            page_content_key=self.get_content_key(),
-                            page_content=text_chunk,
-                            metadata={'source': f"file_{data.data['file_name']}_page_{page_number}",
-                                      'page_number': page_number, 'file_name': data.data['file_name']},
-                        ),
+                docs.extend(
+                    Document(
+                        page_content_key=self.get_content_key(),
+                        page_content=text_chunk,
+                        metadata={
+                            'source': f"file_{data.data['file_name']}_page_{page_number}",
+                            'page_number': page_number,
+                            'file_name': data.data['file_name'],
+                        },
                     )
+                    for text_chunk in SpacyTextSplitter(
+                        chunk_size=1500
+                    ).split_text(page_content)
+                )
                 page_content = ''
             else:
                 page_content += str(element)
